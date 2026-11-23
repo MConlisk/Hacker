@@ -290,6 +290,15 @@ public sealed partial class VirtualMachine
     private void OnFiberFaulted(Fiber fiber)
     {
         var isBudget = IsErrorClass(fiber.Error, "StepBudgetExceeded");
+        if (fiber.AsyncGenerator is not null)
+        {
+            FaultAsyncGenerator(fiber); // observed through the awaited MoveNextAsync task
+            if (!isBudget)
+            {
+                return;
+            }
+        }
+
         var rolledBack = false;
         if (fiber.Journal is { } journal)
         {
@@ -350,6 +359,60 @@ public sealed partial class VirtualMachine
         return task;
     }
 
+    /// <summary>
+    /// MoveNextAsync: resumes the generator's fiber synchronously until it yields (true), returns (false), faults, or awaits
+    /// an incomplete task — in which case the returned Task&lt;bool&gt; completes later in simulated time.
+    /// </summary>
+    internal TaskObject ResumeAsyncGenerator(AsyncGeneratorObject generator)
+    {
+        var task = new TaskObject(Image.TaskOfTClass);
+        if (generator.Finished || generator.Fiber is null)
+        {
+            task.TryComplete(Value.False);
+            return task;
+        }
+
+        if (generator.Pending is not null)
+        {
+            throw new ScriptErrorRequest("Error", "MoveNextAsync was called again before the previous call completed.");
+        }
+
+        generator.Pending = task;
+        if (++_nesting > Options.MaxNesting)
+        {
+            _nesting--;
+            throw new ScriptErrorRequest("Error", "Async calls are nested too deeply.");
+        }
+
+        try
+        {
+            var fiber = generator.Fiber;
+            fiber.BudgetRemaining = fiber.Budget ?? long.MaxValue;
+            var saved = _current;
+            var status = Execute(fiber, long.MaxValue, barrier: null, out _);
+            _current = saved;
+            if (status == ExecStatus.Faulted)
+            {
+                FaultAsyncGenerator(fiber);
+            }
+        }
+        finally
+        {
+            _nesting--;
+        }
+
+        return task;
+    }
+
+    private static void FaultAsyncGenerator(Fiber fiber)
+    {
+        var generator = fiber.AsyncGenerator!;
+        generator.Finished = true;
+        var pending = generator.Pending;
+        generator.Pending = null;
+        pending?.TryFault(fiber.Error);
+    }
+
     private void OnAsyncFault(Fiber child)
     {
         if (child.Task is { } task)
@@ -400,7 +463,17 @@ public sealed partial class VirtualMachine
                     }
 
                     case Semantics.FunctionFlavor.AsyncIterator:
-                        throw new ScriptErrorRequest("Error", "Async iterators are not supported yet.");
+                    {
+                        var generator = new AsyncGeneratorObject(unit);
+                        var frame = CreateFrame(unit, receiver, parameters, captures);
+                        frame.AsyncGenerator = generator;
+                        var child = NewFiber(unit.Name, fiber.Budget, journal: false);
+                        child.AsyncGenerator = generator;
+                        child.Frames.Add(frame);
+                        generator.Fiber = child;
+                        result = Value.FromObject(generator);
+                        return false;
+                    }
                 }
 
                 if (fiber.Frames.Count >= Options.MaxFrames)

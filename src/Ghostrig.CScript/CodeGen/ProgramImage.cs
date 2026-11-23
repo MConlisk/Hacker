@@ -77,6 +77,7 @@ public sealed class ProgramImage : RuntimeTypeResolver
             TaskObject t => t.Class,
             NativeObject n => n.Class,
             GeneratorObject => Linker.GeneratorClass,
+            AsyncGeneratorObject => Linker.AsyncGeneratorClass,
             _ => Linker.ObjectClass,
         },
     };
@@ -101,6 +102,23 @@ public sealed class ProgramImage : RuntimeTypeResolver
         image.Natives = natives ?? NativeRegistry.Default;
         return image;
     }
+}
+
+/// <summary>
+/// State of an <c>async Iterable&lt;T&gt;</c> function (Doc 7 §5.6): its body runs on its own fiber, resumed by each
+/// <c>MoveNextAsync</c>, and may await simulated-time tasks between yields.
+/// </summary>
+public sealed class AsyncGeneratorObject(CodeUnit code)
+{
+    public CodeUnit Code { get; } = code;
+    internal Vm.Fiber? Fiber { get; set; }
+    public Value Current { get; internal set; }
+    public bool Finished { get; internal set; }
+
+    /// <summary>The Task&lt;bool&gt; of the MoveNextAsync call in flight, if any.</summary>
+    internal TaskObject? Pending { get; set; }
+
+    public override string ToString() => $"async iterator {Code.Name}";
 }
 
 /// <summary>Suspended iterator state created by calling an iterator function (Doc 7 §5.5).</summary>

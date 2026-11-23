@@ -498,6 +498,15 @@ internal sealed class DeclarationBinder
             }
         }
 
+        // Doc 7 §5.6 spells async iterators "async Iterable<T>"; they are AsyncIterable<T> for await foreach.
+        var known = _compilation.References.FirstOrDefault()?.WellKnown ?? WellKnownTypes.Empty;
+        if (method.IsAsync && method.ReturnType is NamedTypeSymbol { TypeArguments.Length: 1 } iterable
+            && ReferenceEquals(iterable.Definition, known.Iterable) && known.AsyncIterable is { } asyncIterable
+            && Binding.BodyBinder.ContainsYield(decl.Body))
+        {
+            method.ReturnType = asyncIterable.Construct(iterable.TypeArguments);
+        }
+
         if (method.IsAsync && !IsValidAsyncReturn(method.ReturnType))
         {
             Report(tree, DiagnosticCodes.InvalidAsyncReturn, decl.ReturnType.Span);
@@ -511,7 +520,7 @@ internal sealed class DeclarationBinder
         var wk = _compilation.References.FirstOrDefault()?.WellKnown;
         return type == PrimitiveType.Void || type.IsError
                || (type is NamedTypeSymbol n && (ReferenceEquals(n.Definition, wk?.Task) || ReferenceEquals(n.Definition, wk?.TaskOfT)
-                                                 || n.Definition.Name == "Task"));
+                                                 || ReferenceEquals(n.Definition, wk?.AsyncIterable) || n.Definition.Name == "Task"));
     }
 
     private ImmutableArray<ParameterSymbol> BindParameters(SyntaxTree tree, TypeScope scope, ImmutableArray<Parameter> parameters, Symbol owner)

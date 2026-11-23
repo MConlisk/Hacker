@@ -54,6 +54,7 @@ internal sealed class Linker
         TaskClass = GetClass(compilation.WellKnown.Task!);
         TaskOfTClass = GetClass(compilation.WellKnown.TaskOfT!);
         GeneratorClass = BuildGeneratorClass();
+        AsyncGeneratorClass = BuildAsyncGeneratorClass();
         NativeIteratorClass = BuildNativeIteratorClass();
     }
 
@@ -68,6 +69,7 @@ internal sealed class Linker
     public RuntimeClass TaskClass { get; }
     public RuntimeClass TaskOfTClass { get; }
     public RuntimeClass GeneratorClass { get; }
+    public RuntimeClass AsyncGeneratorClass { get; }
     public RuntimeClass NativeIteratorClass { get; }
     public int ToStringSlot { get; }
 
@@ -451,6 +453,26 @@ internal sealed class Linker
         generator.VTable[SlotOf(getIterator)] = Register(new IntrinsicCallable("GetIterator", 1, IntrinsicKind.GeneratorGetIterator));
         generator.VTable[SlotOf(moveNext)] = Register(new IntrinsicCallable("MoveNext", 1, IntrinsicKind.GeneratorMoveNext));
         generator.VTable[SlotOf(current)] = Register(new IntrinsicCallable("get_Current", 1, IntrinsicKind.GeneratorCurrent));
+        ClassIndex(generator);
+        return generator;
+    }
+
+    /// <summary>Runtime class of async iterator objects: both the AsyncIterable and its AsyncIterator.</summary>
+    private RuntimeClass BuildAsyncGeneratorClass()
+    {
+        var generator = new RuntimeClass("AsyncIterator", null, ObjectClass);
+        var iterable = Compilation.WellKnown.AsyncIterable!;
+        var getIterator = iterable.GetDeclaredMembers("GetAsyncIterator").OfType<MethodSymbol>().Single();
+        var iterator = ((NamedTypeSymbol)getIterator.ReturnType).Definition;
+        var moveNext = iterator.GetDeclaredMembers("MoveNextAsync").OfType<MethodSymbol>().Single();
+        var current = iterator.GetDeclaredMembers("Current").OfType<PropertySymbol>().Single().Getter!;
+        generator.Interfaces.Add(iterable);
+        generator.Interfaces.Add(iterator);
+        generator.VTable[SlotOf(getIterator)] = Register(new NativeCallable("GetAsyncIterator", 1, true, (_, a) => a[0], "<async-iterator>.GetAsyncIterator"));
+        generator.VTable[SlotOf(moveNext)] = Register(new NativeCallable("MoveNextAsync", 1, true,
+            (ctx, a) => Value.FromObject(ctx.MoveNextAsync(a[0].As<AsyncGeneratorObject>())), "<async-iterator>.MoveNextAsync"));
+        generator.VTable[SlotOf(current)] = Register(new NativeCallable("get_Current", 1, true,
+            (_, a) => a[0].As<AsyncGeneratorObject>().Current, "<async-iterator>.Current"));
         ClassIndex(generator);
         return generator;
     }

@@ -209,7 +209,7 @@ internal sealed partial class BodyBinder
         return declared;
     }
 
-    private static bool ContainsYield(Node? node) => node switch
+    internal static bool ContainsYield(Node? node) => node switch
     {
         null => false,
         YieldReturnStmt or YieldBreakStmt => true,

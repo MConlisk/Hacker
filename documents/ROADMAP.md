@@ -13,8 +13,8 @@
 | M0 Repository & toolchain | ✅ Done | `Ghostrig.sln`, `Directory.Build.props`, `.github/workflows/ci.yml` | CI green on every push and pull request |
 | M1 Headless kernel core | ✅ Done | `src/Ghostrig.Kernel`, `content/` | 80 tests (`tests/Ghostrig.Kernel.Tests`) |
 | M2 CScript language, compiler & VM | ✅ Done | `src/Ghostrig.CScript` | 201 tests (`tests/Ghostrig.CScript.Tests`) |
-| M2b Standard library (`Std.*`) | 🟡 In progress | `src/Ghostrig.CScript/Stdlib/Std.*.csd`, `Natives/Std` | 93 tests (`tests/Ghostrig.CScript.Tests/Std`); all 16 `Std.*` namespaces done; async iterators and Stryker remain |
-| M3 Drivers & system libraries | ⬜ Not started | — | — |
+| M2b Standard library (`Std.*`) | ✅ Done | `src/Ghostrig.CScript/Stdlib/Std.*.csd`, `Natives/Std`, `Testing/` | 297 CScript tests (93 in `Std/`, 5 async-iterator); link check; Stryker in CI (kernel baseline 46.6 %) |
+| M3 Drivers & system libraries | ⏭ Next | — | — |
 | M4 MonoGame host shell | ⬜ Not started | — | — |
 | M5 Core applications | ⬜ Not started | — | — |
 | M6 Narrative runtime | ⬜ Not started | — | — |
@@ -26,7 +26,7 @@
 | M12 CScript Portal | ⬜ Not started | — | — |
 | M13 Polish & release | ⬜ Not started | — | — |
 
-Merged pull requests: #1 (docs, M0, M1, CScript front end), #2 (type checker), #3 (M2 bytecode compiler, VM, hot-swap). M2b work continues on branch `ccr-b7b99d06-09w97q`.
+Merged pull requests: #1 (docs, M0, M1, CScript front end), #2 (type checker), #3 (M2 bytecode compiler, VM, hot-swap). M2b is on branch `ccr-b7b99d06-09w97q` (not yet merged).
 
 ## Guiding principles for the build
 
@@ -43,7 +43,8 @@ Entries marked ✅ exist today; the others are planned and named here so the lay
 src/
   Ghostrig.Kernel/        ✅ Simulation clock, cost model, hardware bay, thermals, VFS/ACL, network, DNS, event bus, save/load
   Ghostrig.CScript/       ✅ Lexer, parser, type checker, bytecode compiler, step-metered VM, Core natives, disassembler
-                          🟡 M2b Std.* library (Stdlib/*.csd declarations, Natives/Std implementations)
+                          ✅ M2b Std.* library (Stdlib/*.csd declarations, Natives/Std implementations),
+                             async iterators, Testing.TestRunner
   Ghostrig.SystemLibs/    ⬜ M3  Gfx, Input, Fs, Net, Proc, Log, Sys, Media, Shop, Account, CForms controls
   Ghostrig.Narrative/     ⬜ M6  Storylet engine, blackboard, listeners, dialogue player, graph validator
   Ghostrig.Portal/        ⬜ M12 CScript Portal sandbox + IProjectRepository (local store)
@@ -94,7 +95,7 @@ tools/
   ✅ Met — `VmTests` (budgets, rollback, async timing, determinism), `HotSwapAndDisassemblyTests`, `ParserTests` (FsCheck fuzzing), and a test that parses every module sample in Documents 5 and 7.
 - Moved out of M2: the `Std.*` catalog (Doc 7 §13.2–13.14) → **M2b**; system libraries (§13.15–13.16) → **M3–M5**.
 
-### M2b. Standard library — 🟡 In progress — *Doc 7 §13.2–13.14*
+### M2b. Standard library — ✅ Done — *Doc 7 §13.2–13.14*
 - One native declaration file per namespace (`Stdlib/Std.*.csd`, the contract players read in the IDE API browser, with published step costs) plus deterministic, step-charged host implementations (`Natives/Std`).
 - ✅ Infrastructure: native classes in any module, `@Native("key")` for same-arity overloads, `NativeState` snapshots so faulted events roll back collections, caches and generators like fields and arrays; natives that rewrite script arrays journal them too; fail-fast iteration on concurrent modification; one `ValueComparer` (structural for values, `HashCode`/`Equatable`/`Comparable` for classes, identity otherwise) used by every collection.
 - ✅ `Std.Collections`: `List`, `Map` (insertion-ordered), `SortedMap`, `Set`, `SortedSet`, `Queue`, `Stack`, `Deque`, `PriorityQueue` (stable), `RingBuffer`, `BitSet`, `Grid2D`, `Matrix`, `Multimap`, read-only views; caches `LruCache`, `LfuCache`, `TtlCache` (simulated clock) with hit/miss/eviction counters; `ObjectPool`, `BloomFilter`, `CountMinSketch`, `HyperLogLog`, `Trie`, `IntervalTree`, `SkipList`, `ConsistentHashRing`.
@@ -114,11 +115,13 @@ tools/
 - ✅ `Std.Data`: immutable `Table` with CSV/JSON import and export, `Where`/`Select`/`WithColumn`/`OrderBy`/`Join`/`LeftJoin`/`GroupBy`/`Pivot`/aggregates.
 - ✅ `Std.Game` (simulation side): fixed-step `GameLoop`, `Easing`/`Tween`, `Color` and palettes, collision with penetration and swept AABB, `SpatialHash`, `Body`, `StateMachine`, grid `Pathfinding`, `Camera2D`, `TileMap`, seeded `ParticleSystem`, `InputMap`.
 - ✅ `Std.Test`: `Assert` (raises `AssertionFailed`, code `EASSERT`), generators and `Property.ForAll` with shrinking, step-count `Bench`, `Debug` (trace log, breakpoints, `Inspect`, `Profile`); host-side `Testing.TestRunner` discovers `@Test`/`@TestCase`/`@Setup`/`@Teardown` and runs each test in a fresh VM.
-- ⬜ Deferred into M2b from M2: async iterators; Stryker.NET mutation testing in CI.
+- ✅ Async iterators (closed from M2): `async Iterable<T>` (Doc 7 spelling) or `async AsyncIterable<T>` with `yield` and `await`, consumed by `await foreach`; each runs on its own fiber, `MoveNextAsync` completes on simulated time, body errors surface at the consumer, and step-budget faults are never swallowed.
+- ✅ Stryker.NET mutation testing in CI (closed from M1): pinned local tool (`.config/dotnet-tools.json`), a `stryker-config.json` per test project, pull requests mutate only changed files (`--since`), a weekly schedule and manual runs mutate everything; HTML/JSON/Markdown reports are uploaded as artifacts. Baseline: kernel 46.6 % (1,129 mutants tested); the kernel build breaks below 45 % so the score can only ratchet up.
+- ✅ Fixes found on the way: generic methods of constructed generic classes now infer type arguments from lambdas; implementations hide the interface members they satisfy (no false ambiguity on `HashCode`); module-level constants in declaration files fold; Doc 7 samples import the `Std` modules they use.
 - **Exit:** every declared native is implemented (link-checked in CI) and each namespace has behavioural tests run through the VM.
-  🟡 Link check in place (`StdLibraryTests`: no missing and no orphan natives, library compiles without diagnostics); behavioural tests through the VM for all 16 namespaces.
+  ✅ Met — `StdLibraryTests` (no missing and no orphan natives across all 16 modules; the library compiles without diagnostics) and behavioural VM tests for every namespace in `tests/Ghostrig.CScript.Tests/Std` (including rollback of native state, determinism, and reference vectors: xoshiro256\*\*, CRC-32, Murmur3, DEFLATE readable by the platform inflater).
 
-### M3. Drivers & system libraries — ⬜ Not started — *Doc 3 §3.1, Doc 5 §2*
+### M3. Drivers & system libraries — ⏭ Next — *Doc 3 §3.1, Doc 5 §2*
 - `IKernelDriver` + device-class interfaces; `Sys.Hardware` binding metered by the cost model.
 - Stock flawed drivers for Act I (`LegacyGPUDriver.drv`, `NetCardDriver.drv`, `StorageController.drv`) and their reference fixes (used by tests and Street Ghost patches).
 - System libraries `Fs`, `Net`, `Proc`, `Log`, `Sys`, `Media`, `Shop`, `Account` as capability-gated proxies.
@@ -202,14 +205,12 @@ Items consciously postponed while building; each has a target milestone so nothi
 
 | Item | Found in | Target |
 |---|---|---|
-| Async iterators (`async Iterable<T>` with `yield`) report "not supported yet" at runtime | M2 | M2b |
 | Runtime type tests ignore generic arguments (`List<int>` and `List<string>` test the same) | M2 | Documented limitation; revisit if gameplay needs it |
 | VM step charges go to a stand-in clock; billing CScript steps as CPU cycles through the kernel (heat, simulated time) | M2 | M3 |
 | Per-module hot-swap of a single driver (today the whole program image is swapped) | M2 | M3 |
 | Rollback covers writes by the faulting fiber only; writes by async calls it started are not undone | M2 | M3 |
 | Faults of tasks nobody awaits are reported as soon as they fail, rather than when the task is collected | M2 | M3 |
 | `Net`/`Fs` transfers billed through CScript drivers | M1 | M3 |
-| Stryker.NET mutation testing wired into CI | M1 | M2b |
 | Doc 7 examples that use system libraries (`Net`, `CForms`, `Sys.Hardware`) are parsed in tests but not yet type-checked (the `Std`-only sample §16.3 now compiles and runs) | M2 | M3–M5 |
 | `foreach` cannot deconstruct tuples (`foreach (var (k, v) in map)`); use `entry.Item1` / `entry.Item2` | M2b | Language polish, before M5 (IDE) |
 | Generic arguments are erased at run time, so `Map<string, int>` and `Map<int, int>` share a runtime class (consistent with the M2 type-test limitation) | M2b | Documented limitation |
@@ -222,12 +223,14 @@ Items consciously postponed while building; each has a target milestone so nothi
 | `Assert.Throws<T>` is `Assert.Throws(action, "ClassName")`: generic arguments are erased at run time | M2b | Documented in the API |
 | `Std.Net` is IPv4-only (every NY-56 network is IPv4) | M2b | Revisit only if a story beat needs IPv6 |
 | `Std.Path` re-implements the kernel's `VfsPath` rules because the CScript assembly does not reference the kernel; the two must stay in step | M2b | Shared conformance test when M3 binds `Fs` |
+| Kernel mutation score is 46.6 %; most survivors are in `JsonFields`, `DeterministicRandom`, `HardwareCatalog`, `VirtualFileSystem` and `HardwareComponents` | M2b | Raise to ≥ 60 % (break 50 %) during M3, which reworks the hardware path |
+| CScript mutation baseline not yet measured (too large to run locally); its break threshold is 0 until the first full weekly run | M2b | Set the threshold after the first scheduled run |
 | Rollback snapshots a whole native collection the first time an event mutates it (O(n) host time, never charged as steps); per-operation undo would be cheaper for very large collections | M2b | Revisit with M3 profiling |
 
 ## Testing strategy (applies to every milestone)
 
 - **Unit + property-based** (xUnit + FsCheck): parser round-trips, ACL invariants, cost-model monotonicity (batching never costs more than unbatched), DNS consistency.
 - **Determinism replay:** recorded input streams replayed in CI must reproduce the same state hash.
-- **Mutation testing** (Stryker.NET) on Kernel and CScript to keep the test suite honest.
+- **Mutation testing** (Stryker.NET) on Kernel and CScript to keep the test suite honest: changed files on every pull request, everything weekly. Break thresholds: kernel 45 % (baseline 46.6 %); CScript set after its first full weekly run.
 - **Content validation:** hardware catalog, world manifests, and narrative graph validated in CI.
 - **Headless playthroughs:** scripted runs to each ending once M6+ lands.

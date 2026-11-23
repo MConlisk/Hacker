@@ -53,6 +53,8 @@ public sealed class NativeContext
     public Value NewIterator(Natives.NativeState owner, IEnumerable<Value> items, long stepsPerItem = 1) =>
         Value.FromObject(new NativeObject(Image.NativeIteratorClass, new Natives.VersionedIterator(owner, items.GetEnumerator(), stepsPerItem)));
 
+    internal TaskObject MoveNextAsync(AsyncGeneratorObject generator) => _vm.ResumeAsyncGenerator(generator);
+
     internal Callable ResolveVirtual(int slot, Value receiver) => _vm.ResolveVirtual(slot, receiver);
 
     /// <summary>Invokes a function value with as many arguments as it declares (lambdas may ignore trailing ones).</summary>

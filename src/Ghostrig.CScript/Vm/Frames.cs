@@ -26,6 +26,9 @@ public sealed class Frame
     /// <summary>Set for frames that run an iterator body.</summary>
     internal GeneratorObject? Generator { get; set; }
 
+    /// <summary>Set for the bottom frame of an async iterator's fiber.</summary>
+    internal AsyncGeneratorObject? AsyncGenerator { get; set; }
+
     /// <summary>Marks the frame entered by a synchronous host callback; returning from it ends the nested run.</summary>
     internal bool IsBarrier { get; set; }
 
@@ -77,6 +80,9 @@ public sealed class Fiber
 
     /// <summary>The task this fiber completes (async functions); null for event and synchronous fibers.</summary>
     public TaskObject? Task { get; internal set; }
+
+    /// <summary>The async iterator this fiber runs, if any (its faults go to the pending MoveNextAsync task).</summary>
+    internal AsyncGeneratorObject? AsyncGenerator { get; set; }
 
     /// <summary>Step budget per run segment (Doc 7 §8.5); null means unlimited (workers, async continuations of workers).</summary>
     public long? Budget { get; internal set; }
