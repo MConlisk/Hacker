@@ -419,3 +419,70 @@ public class VmTests
         Assert.Empty(image.LinkErrors);
     }
 }
+
+public class HotSwapAndDisassemblyTests
+{
+    private static Compilation Compile(string source) => Compilation.Create(SyntaxTree.Parse("module Driver;\n" + source));
+
+    private static Value Call(VirtualMachine vm, string name) => vm.Invoke(vm.Image.FindFunction("Driver", name)!);
+
+    [Fact]
+    public void Hot_swap_replaces_code_and_keeps_persisted_globals()
+    {
+        var vm = new VirtualMachine(ProgramImage.Link(Compile("""
+            @Persist int Packets = 0;
+            int Batches = 0;
+            int Send() { Packets += 1; Batches += 1; return Packets * 100 + Batches; }
+            """)));
+        vm.Initialize();
+        Call(vm, "Send");
+        Assert.Equal(202, Call(vm, "Send").AsInt);
+
+        var result = vm.HotSwap(Compile("""
+            @Persist int Packets = 0;
+            int Batches = 0;
+            int Send() { Packets += 32; Batches += 1; return Packets * 100 + Batches; }
+            """));
+        Assert.True(result.Succeeded, result.Message);
+        Assert.Equal(["Driver.Packets"], result.PersistedGlobals);
+        Assert.Equal(3401, Call(vm, "Send").AsInt); // Packets 2 + 32 kept; Batches re-initialized
+    }
+
+    [Fact]
+    public void Failed_initialization_reverts_to_the_previous_image()
+    {
+        var vm = new VirtualMachine(ProgramImage.Link(Compile("int Version() => 1;")));
+        vm.Initialize();
+
+        var broken = vm.HotSwap(Compile("int Ring = Explode(); int Explode() { throw new HardwareError(\"ring init failed\"); } int Version() => 2;"));
+        Assert.False(broken.Succeeded);
+        Assert.Contains("ring init failed", broken.Message);
+        Assert.Equal(1, Call(vm, "Version").AsInt);
+
+        var invalid = vm.HotSwap(Compile("int Version() => \"two\";"));
+        Assert.False(invalid.Succeeded);
+        Assert.Contains("CSC4003", invalid.Message);
+        Assert.Equal(1, Call(vm, "Version").AsInt);
+    }
+
+    [Fact]
+    public void Disassembly_names_operands_and_lines()
+    {
+        var image = ProgramImage.Link(Compile("""
+            int Twice(int x) {
+                return x * 2;
+            }
+            string Hello(string name) => "hi " + name.ToUpper();
+            """));
+        var listing = Disassembler.Disassemble((CodeUnit)image.FindFunction("Driver", "Twice")!, image);
+        Assert.Contains("; line 3", listing);
+        Assert.Contains("LoadLocal       local 0", listing);
+        Assert.Contains("IMul", listing);
+        Assert.Contains("Return          value", listing);
+
+        var hello = Disassembler.Disassemble((CodeUnit)image.FindFunction("Driver", "Hello")!, image);
+        Assert.Contains("PushConst       \"hi \"", hello);
+        Assert.Contains("CallVirtual", hello);
+        Assert.Contains("StrConcat", hello);
+    }
+}

@@ -53,7 +53,7 @@ public sealed record VmOptions
 /// </summary>
 public sealed partial class VirtualMachine
 {
-    private readonly Value[] _globals;
+    private Value[] _globals;
     private readonly Queue<Fiber> _ready = new();
     private readonly SortedDictionary<(long Time, long Sequence), Action> _timers = new();
     private readonly NativeContext _context;
@@ -73,7 +73,7 @@ public sealed partial class VirtualMachine
         _context = new NativeContext(this);
     }
 
-    public ProgramImage Image { get; }
+    public ProgramImage Image { get; private set; }
     public IVmHost Host { get; }
     public VmOptions Options { get; }
 

@@ -37,6 +37,12 @@ public sealed class ProgramImage : RuntimeTypeResolver
 
     public int ToStringSlot => Linker.ToStringSlot;
 
+    /// <summary>The native registry this image was linked against (reused when hot-swapping).</summary>
+    public NativeRegistry Natives { get; internal set; } = NativeRegistry.Default;
+
+    /// <summary>The global slot of a module-level or static field.</summary>
+    public int GlobalSlot(FieldSymbol field) => Linker.GlobalSlot(field);
+
     /// <summary>Looks up a module-level function by module and name (first overload).</summary>
     public Callable? FindFunction(string module, string name)
     {
@@ -91,7 +97,9 @@ public sealed class ProgramImage : RuntimeTypeResolver
             throw new InvalidOperationException("Cannot link a compilation with errors:\n" + string.Join("\n", compilation.Diagnostics.Where(d => d.IsError)));
         }
 
-        return new Linker(compilation, natives ?? NativeRegistry.Default).Link();
+        var image = new Linker(compilation, natives ?? NativeRegistry.Default).Link();
+        image.Natives = natives ?? NativeRegistry.Default;
+        return image;
     }
 }
 
