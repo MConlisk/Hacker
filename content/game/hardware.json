@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "cost_constants": {
+    "header_bytes": 64,
+    "cpu_transfer_multiplier": 16,
+    "dma_transfer_multiplier": 1,
+    "memory_penalty_per_cas": 60
+  },
+  "components": [
+    {
+      "category": "chassis", "id": "chassis.subrig-salvage", "name": "Salvaged Sub-Level Tower",
+      "price_credits": 0,
+      "memory_slots": 2, "storage_slots": 2, "network_slots": 1,
+      "cooling_mw_per_c": 1200, "heat_capacity_j_per_c": 180,
+      "ambient_mc": 26000, "cascade_mc": 95000, "boot_ms": 4000
+    },
+    {
+      "category": "chassis", "id": "chassis.reference-rig", "name": "Reference Rig (Street Ghost billing profile)",
+      "price_credits": 0,
+      "memory_slots": 4, "storage_slots": 4, "network_slots": 2,
+      "cooling_mw_per_c": 9000, "heat_capacity_j_per_c": 600,
+      "ambient_mc": 22000, "cascade_mc": 105000, "boot_ms": 1500
+    },
+    {
+      "category": "cpu", "id": "cpu.salvaged-c600", "name": "Salvaged C600 Sub-Level Processor",
+      "price_credits": 0,
+      "clock_mhz": 600, "cores": 1, "ipc": 0.9, "tdp_watts": 45, "idle_permille": 150
+    },
+    {
+      "category": "cpu", "id": "cpu.reference-x9", "name": "Enterprise X9 (reference)",
+      "price_credits": 0,
+      "clock_mhz": 4800, "cores": 16, "ipc": 4.0, "tdp_watts": 125, "idle_permille": 80
+    },
+    {
+      "category": "memory", "id": "memory.salvaged-2g", "name": "Salvaged 2GB Module",
+      "price_credits": 0,
+      "capacity_mb": 2048, "bandwidth_gbps": 6.4, "cas_latency": 18
+    },
+    {
+      "category": "memory", "id": "memory.ddr9-16g", "name": "16GB DDR9 Memory Module",
+      "price_credits": 1800, "vendors": ["silicon-alley-surplus"],
+      "capacity_mb": 16384, "bandwidth_gbps": 96, "cas_latency": 9
+    },
+    {
+      "category": "storage", "id": "storage.platter-500", "name": "Salvaged 500GB Mechanical Platter",
+      "price_credits": 0, "default_driver": "/sys/drivers/storage/StorageController.drv",
+      "medium": "platter", "read_mbps": 90, "dma_channels": 1, "access_latency_us": 1, "platter_noise": 850
+    },
+    {
+      "category": "storage", "id": "storage.cryo-nvme", "name": "Cryo-NVMe Array (multi-channel)",
+      "price_credits": 6200, "vendors": ["hardware-exchange"], "default_driver": "/sys/drivers/storage/NVMeQueue.drv",
+      "medium": "nvme", "read_mbps": 14000, "dma_channels": 8, "access_latency_us": 10, "platter_noise": 0
+    },
+    {
+      "category": "network", "id": "network.kestrel-om1", "name": "Kestrel OM-1 Optical Modem",
+      "price_credits": 0, "default_driver": "/sys/drivers/net/NetCardDriver.drv",
+      "link_mbps": 50, "ring_size": 64, "max_batch": 32
+    },
+    {
+      "category": "network", "id": "network.optilink-e", "name": "OptiLink Enterprise NIC (refurbished)",
+      "price_credits": 2400, "vendors": ["silicon-alley-surplus"], "default_driver": "/sys/drivers/net/OptiLinkDriver.drv",
+      "link_mbps": 10000, "ring_size": 1024, "max_batch": 256
+    },
+    {
+      "category": "bus", "id": "bus.stock-southbridge", "name": "Stock Southbridge",
+      "price_credits": 0, "default_driver": "/sys/drivers/bus/BusController.drv",
+      "bus_width_bits": 64, "irq_coalesce_cap": 8, "arbitration_cycles": 300, "interrupt_cycles": 400,
+      "interrupt_energy_nj": 2000
+    },
+    {
+      "category": "bus", "id": "bus.quantumbus", "name": "QuantumBus I/O Controller",
+      "price_credits": 5400, "vendors": ["hardware-exchange"], "default_driver": "/sys/drivers/bus/BusController.drv",
+      "bus_width_bits": 256, "irq_coalesce_cap": 64, "arbitration_cycles": 120, "interrupt_cycles": 150,
+      "interrupt_energy_nj": 900
+    },
+    {
+      "category": "gpu", "id": "gpu.novagx-2000", "name": "NovaGX-2000 GPU",
+      "price_credits": 0, "default_driver": "/sys/drivers/gpu/LegacyGPUDriver.drv",
+      "max_draw_batch": 4096
+    },
+    {
+      "category": "audio", "id": "audio.audiomixer", "name": "AudioMixer DSP",
+      "price_credits": 0, "default_driver": "/sys/drivers/audio/AudioMixerDriver.drv",
+      "buffer_frames": 4096
+    }
+  ]
+}
