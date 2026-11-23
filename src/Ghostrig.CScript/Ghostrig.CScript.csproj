@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Stdlib\*.csd" LogicalName="Stdlib.%(Filename).csd" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="Ghostrig.CScript.Tests" />
   </ItemGroup>
 

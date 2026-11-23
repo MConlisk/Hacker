@@ -53,7 +53,7 @@ import vault.ironclad;     // CS-Vault package (§12)
 
 - **Encoding:** UTF-8. Identifiers are ASCII letters, digits and `_`, and do not start with a digit.
 - **Comments:** `// line`, `/* block */`, and `/// doc comment` (shown in the IDE's hover help).
-- **Keywords:** `module import as private const var if else while do for foreach in break continue return switch case default try catch finally throw new null true false this base class struct interface enum where is fn yield typeof params async await`. `get`, `set` and `void` are contextual.
+- **Keywords:** `module import as private const var if else while do for foreach in break continue return switch case default try catch finally throw new null true false this base class struct interface enum where is fn yield typeof params async await static`. `get`, `set` and `void` are contextual.
 - **Literals:**
   - integers: `42`, `0x2A`, `0b101010`, `1_000_000`
   - floats: `3.14`, `1e-9`
@@ -94,6 +94,8 @@ class LruCache<K, V> where K : Hashable { ... }      // generics with interface 
 ```
 
 - Classes support single inheritance (`class A : B, IFoo`), `base` calls, and interface implementation. Members are `public` unless marked `private`.
+- Instance methods are **virtual by default** (Java-style): a derived class that declares a method with the same name and parameter types overrides it, and `base.Method()` calls the inherited version.
+- `static` members belong to the type rather than an instance: `int.Parse(s)`, `Math.Min(a, b)`, `Task.WhenAll(…)`. Module-level functions are always static.
 - Generics are type-checked at compile time. Constraints are interfaces only. The built-in constraint interfaces are `Hashable`, `Comparable<T>`, `Equatable<T>`, `Iterable<T>` and `Serializable`.
 - **Nullability:** reference types are non-null by default; `T?` admits `null`. The operators `?.`, `??` and `!` behave as in C#, and the compiler tracks null-state.
 - `is` performs type tests, and `x is Session s` binds. `(T)x` is a checked cast that throws `CastError`.

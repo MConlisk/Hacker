@@ -32,7 +32,7 @@ public enum TokenKind
     BreakKeyword, ContinueKeyword, ReturnKeyword, SwitchKeyword, CaseKeyword, DefaultKeyword,
     TryKeyword, CatchKeyword, FinallyKeyword, ThrowKeyword, NewKeyword, NullKeyword, TrueKeyword, FalseKeyword,
     ThisKeyword, BaseKeyword, ClassKeyword, StructKeyword, InterfaceKeyword, EnumKeyword, WhereKeyword,
-    IsKeyword, FnKeyword, YieldKeyword, TypeofKeyword, ParamsKeyword, AsyncKeyword, AwaitKeyword,
+    IsKeyword, FnKeyword, YieldKeyword, TypeofKeyword, ParamsKeyword, AsyncKeyword, AwaitKeyword, StaticKeyword,
 }
 
 /// <summary>A segment of an interpolated string: literal text, or a hole holding an expression.</summary>
@@ -75,7 +75,7 @@ public static class SyntaxFacts
         ["struct"] = TokenKind.StructKeyword, ["interface"] = TokenKind.InterfaceKeyword, ["enum"] = TokenKind.EnumKeyword,
         ["where"] = TokenKind.WhereKeyword, ["is"] = TokenKind.IsKeyword, ["fn"] = TokenKind.FnKeyword,
         ["yield"] = TokenKind.YieldKeyword, ["typeof"] = TokenKind.TypeofKeyword, ["params"] = TokenKind.ParamsKeyword,
-        ["async"] = TokenKind.AsyncKeyword, ["await"] = TokenKind.AwaitKeyword,
+        ["async"] = TokenKind.AsyncKeyword, ["await"] = TokenKind.AwaitKeyword, ["static"] = TokenKind.StaticKeyword,
     }.ToFrozenDictionary(StringComparer.Ordinal);
 
     /// <summary>Built-in type names; they are ordinary identifiers to the lexer and resolved by the binder.</summary>

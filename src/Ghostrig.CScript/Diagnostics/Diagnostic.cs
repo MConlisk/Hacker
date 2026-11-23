@@ -72,4 +72,26 @@ public static class DiagnosticCodes
     public static readonly DiagnosticDescriptor InvalidAssignmentTarget = new("CSC2006", DiagnosticSeverity.Error, "The left-hand side of an assignment must be a variable, field, property or indexer.");
     public static readonly DiagnosticDescriptor InvalidStatement = new("CSC2007", DiagnosticSeverity.Error, "Only assignment, call, increment, decrement, await and new expressions can be used as statements.");
     public static readonly DiagnosticDescriptor DuplicateModifier = new("CSC2008", DiagnosticSeverity.Error, "Duplicate modifier '{0}'.");
+
+    // 3xxx — declarations, names and types
+    public static readonly DiagnosticDescriptor DuplicateModule = new("CSC3001", DiagnosticSeverity.Error, "Module '{0}' is declared more than once.");
+    public static readonly DiagnosticDescriptor ModuleNotFound = new("CSC3002", DiagnosticSeverity.Error, "Module '{0}' could not be found.");
+    public static readonly DiagnosticDescriptor TypeNotFound = new("CSC3003", DiagnosticSeverity.Error, "The type '{0}' could not be found.");
+    public static readonly DiagnosticDescriptor AmbiguousName = new("CSC3004", DiagnosticSeverity.Error, "'{0}' is ambiguous between {1}.");
+    public static readonly DiagnosticDescriptor WrongTypeArgumentCount = new("CSC3005", DiagnosticSeverity.Error, "'{0}' requires {1} type argument(s).");
+    public static readonly DiagnosticDescriptor ConstraintViolation = new("CSC3006", DiagnosticSeverity.Error, "The type '{0}' does not satisfy the constraint '{1}' of '{2}'.");
+    public static readonly DiagnosticDescriptor VoidNotAllowed = new("CSC3007", DiagnosticSeverity.Error, "'void' can only be used as a return type.");
+    public static readonly DiagnosticDescriptor DuplicateMember = new("CSC3008", DiagnosticSeverity.Error, "'{0}' is already declared in {1}.");
+    public static readonly DiagnosticDescriptor MissingBody = new("CSC3009", DiagnosticSeverity.Error, "'{0}' must declare a body.");
+    public static readonly DiagnosticDescriptor CapabilityDenied = new("CSC3010", DiagnosticSeverity.Error, "A {0} module may not use '{1}' (imported via {2}).");
+    public static readonly DiagnosticDescriptor InvalidBaseType = new("CSC3011", DiagnosticSeverity.Error, "'{0}' cannot be used as a base type of {1}: {2}.");
+    public static readonly DiagnosticDescriptor CyclicInheritance = new("CSC3012", DiagnosticSeverity.Error, "Circular base type dependency involving '{0}'.");
+    public static readonly DiagnosticDescriptor InvalidAsyncReturn = new("CSC3013", DiagnosticSeverity.Error, "An async function must return Task, Task<T> or void.");
+    public static readonly DiagnosticDescriptor BodyNotAllowed = new("CSC3014", DiagnosticSeverity.Error, "Interface member '{0}' cannot have a body.");
+    public static readonly DiagnosticDescriptor NotConstant = new("CSC3015", DiagnosticSeverity.Error, "The value of '{0}' must be a compile-time constant.");
+    public static readonly DiagnosticDescriptor VarNotAllowedHere = new("CSC3016", DiagnosticSeverity.Error, "'var' cannot be used for fields; declare an explicit type.");
+    public static readonly DiagnosticDescriptor NestedTypeNotSupported = new("CSC3017", DiagnosticSeverity.Error, "Nested type declarations are not supported; declare '{0}' at module level.");
+    public static readonly DiagnosticDescriptor MissingInterfaceMember = new("CSC3018", DiagnosticSeverity.Error, "'{0}' does not implement interface member '{1}'.");
+    public static readonly DiagnosticDescriptor InvalidMemberInInterface = new("CSC3019", DiagnosticSeverity.Error, "Interfaces cannot declare {0}.");
+    public static readonly DiagnosticDescriptor InvalidModifier = new("CSC3020", DiagnosticSeverity.Error, "The modifier '{0}' is not valid here.");
 }

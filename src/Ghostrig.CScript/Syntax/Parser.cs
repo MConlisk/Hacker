@@ -287,7 +287,7 @@ public sealed class Parser
     private Modifiers ParseModifiers()
     {
         var seen = new HashSet<TokenKind>();
-        while (Current.Kind is TokenKind.PrivateKeyword or TokenKind.AsyncKeyword or TokenKind.ConstKeyword)
+        while (Current.Kind is TokenKind.PrivateKeyword or TokenKind.AsyncKeyword or TokenKind.ConstKeyword or TokenKind.StaticKeyword)
         {
             if (!seen.Add(Current.Kind))
             {
@@ -298,7 +298,8 @@ public sealed class Parser
         }
 
         return new Modifiers(
-            seen.Contains(TokenKind.PrivateKeyword), seen.Contains(TokenKind.AsyncKeyword), seen.Contains(TokenKind.ConstKeyword));
+            seen.Contains(TokenKind.PrivateKeyword), seen.Contains(TokenKind.AsyncKeyword), seen.Contains(TokenKind.ConstKeyword),
+            seen.Contains(TokenKind.StaticKeyword));
     }
 
     private FieldDecl ParseFieldRest(int start, ImmutableArray<AttributeSyntax> attributes, Modifiers modifiers, string? doc,

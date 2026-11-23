@@ -96,6 +96,20 @@ public sealed class ModuleSymbol : Symbol
     }
 
     public bool IsNative => ModuleKind == ModuleKind.Native;
+
+    private readonly List<NamedTypeSymbol> _hidden = [];
+
+    /// <summary>Member sources of primitives (<c>string</c>, <c>Array&lt;T&gt;</c>) that are not visible by name.</summary>
+    public IReadOnlyList<NamedTypeSymbol> HiddenTypes => _hidden;
+
+    internal void AddHidden(NamedTypeSymbol type)
+    {
+        type.Container = this;
+        _hidden.Add(type);
+    }
+
+    /// <summary>Global field slots allocated so far.</summary>
+    public int GlobalCount { get; internal set; }
 }
 
 public sealed class FieldSymbol : Symbol
@@ -213,7 +227,13 @@ public sealed class MethodSymbol : Symbol
     /// <summary>Declared without a body (interface member).</summary>
     public bool IsAbstract { get; internal set; }
 
-    public bool IsStatic => MethodKind is MethodKind.Function or MethodKind.Lambda;
+    /// <summary>A <c>static</c> member declared inside a type.</summary>
+    public bool IsStaticMember { get; internal set; }
+
+    /// <summary>Methods that overrides by name and parameter types (instance methods are virtual by default).</summary>
+    public MethodSymbol? Overridden { get; internal set; }
+
+    public bool IsStatic => MethodKind is MethodKind.Function or MethodKind.Lambda || IsStaticMember;
 
     /// <summary>Set when the method is a generic instantiation or a member of a constructed type.</summary>
     public MethodSymbol OriginalDefinition { get; private init; }
@@ -248,7 +268,7 @@ public sealed class MethodSymbol : Symbol
         var result = new MethodSymbol(Name, MethodKind)
         {
             Container = Container, IsPrivate = IsPrivate, DocComment = DocComment, Syntax = Syntax, Tree = Tree,
-            IsAsync = IsAsync, IsNative = IsNative, IsAbstract = IsAbstract,
+            IsAsync = IsAsync, IsNative = IsNative, IsAbstract = IsAbstract, IsStaticMember = IsStaticMember, Overridden = Overridden,
             TypeParameters = typeArguments.IsDefaultOrEmpty ? TypeParameters : [],
             ReturnType = ReturnType.Substitute(map),
             OriginalDefinition = OriginalDefinition,

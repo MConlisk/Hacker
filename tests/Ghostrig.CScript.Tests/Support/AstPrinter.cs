@@ -46,6 +46,7 @@ internal static class AstPrinter
                 if (m.IsPrivate) sb.Append("private ");
                 if (m.IsAsync) sb.Append("async ");
                 if (m.IsConst) sb.Append("const ");
+                if (m.IsStatic) sb.Append("static ");
                 return;
             case Node node:
                 WriteNode(sb, node);
