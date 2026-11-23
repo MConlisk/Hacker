@@ -48,7 +48,7 @@ public sealed record FunctionDecl(
 
 public sealed record ConstructorDecl(
     TextSpan Span, ImmutableArray<AttributeSyntax> Attributes, Modifiers Modifiers, string? DocComment,
-    string Name, ImmutableArray<Parameter> Parameters, ConstructorInitializer? Initializer, BlockStmt Body)
+    string Name, ImmutableArray<Parameter> Parameters, ConstructorInitializer? Initializer, BlockStmt? Body)
     : MemberDecl(Span, Attributes, Modifiers, Name, DocComment);
 
 public sealed record ConstructorInitializer(TextSpan Span, bool IsBase, ImmutableArray<Argument> Arguments) : Node(Span);

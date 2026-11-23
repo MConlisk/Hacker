@@ -361,7 +361,8 @@ public sealed class Parser
             initializer = new ConstructorInitializer(From(initStart), isBase, args);
         }
 
-        var body = ParseBlock();
+        // Native declaration files (Doc 7 §13) declare constructors without bodies: 'List();'
+        BlockStmt? body = Match(TokenKind.Semicolon) ? null : ParseBlock();
         return new ConstructorDecl(From(start), attributes, modifiers, doc, name, parameters, initializer, body);
     }
 
