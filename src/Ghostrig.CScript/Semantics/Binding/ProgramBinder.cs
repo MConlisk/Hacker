@@ -28,6 +28,12 @@ internal sealed class ProgramBinder(WellKnownTypes wellKnown, DiagnosticBag diag
             BindGlobals(module);
         }
 
+        // Library declaration files have no initializers, but their module-level constants (Std.Math.Pi) must fold.
+        foreach (var module in modules.Where(m => m.IsNative && m.Tree is not null))
+        {
+            BindNativeConstants(module);
+        }
+
         foreach (var module in userModules)
         {
             BindModuleBodies(module);
@@ -51,6 +57,27 @@ internal sealed class ProgramBinder(WellKnownTypes wellKnown, DiagnosticBag diag
             if (!type.GetDeclaredMembers(type.Name).OfType<MethodSymbol>().Any(m => m.MethodKind == MethodKind.Constructor))
             {
                 type.AddMember(new MethodSymbol(type.Name, MethodKind.Constructor) { ReturnType = PrimitiveType.Void, Tree = type.Tree });
+            }
+        }
+    }
+
+    private void BindNativeConstants(ModuleSymbol module)
+    {
+        var initializer = new MethodSymbol("<module-init>", MethodKind.Function) { Container = module, Tree = module.Tree };
+        foreach (var field in module.Members.OfType<FieldSymbol>())
+        {
+            if (field.Syntax is not FieldDecl { Initializer: { } value } decl || !field.IsConst)
+            {
+                diagnostics.Report(DiagnosticCodes.NotConstant, module.Tree!.Source, field.Syntax!.Span, field.Name);
+                continue;
+            }
+
+            var bound = new BodyBinder(wellKnown, diagnostics, module.Tree!, module, null, initializer, _lambdas)
+                .BindInitializer(value, decl.Type is null ? null : field.Type);
+            field.ConstantValue = bound.ConstantValue;
+            if (bound.ConstantValue is null)
+            {
+                diagnostics.Report(DiagnosticCodes.NotConstant, module.Tree!.Source, decl.Span, decl.Name);
             }
         }
     }

@@ -13,7 +13,7 @@
 | M0 Repository & toolchain | ✅ Done | `Ghostrig.sln`, `Directory.Build.props`, `.github/workflows/ci.yml` | CI green on every push and pull request |
 | M1 Headless kernel core | ✅ Done | `src/Ghostrig.Kernel`, `content/` | 80 tests (`tests/Ghostrig.Kernel.Tests`) |
 | M2 CScript language, compiler & VM | ✅ Done | `src/Ghostrig.CScript` | 201 tests (`tests/Ghostrig.CScript.Tests`) |
-| M2b Standard library (`Std.*`) | 🟡 In progress | `src/Ghostrig.CScript/Stdlib/Std.*.csd`, `Natives/Std` | 42 tests (`tests/Ghostrig.CScript.Tests/Std`); Collections, Seq, Algo, Random done |
+| M2b Standard library (`Std.*`) | 🟡 In progress | `src/Ghostrig.CScript/Stdlib/Std.*.csd`, `Natives/Std` | 53 tests (`tests/Ghostrig.CScript.Tests/Std`); Collections, Seq, Algo, Random, Math, Stats done |
 | M3 Drivers & system libraries | ⬜ Not started | — | — |
 | M4 MonoGame host shell | ⬜ Not started | — | — |
 | M5 Core applications | ⬜ Not started | — | — |
@@ -102,10 +102,12 @@ tools/
 - ✅ `Std.Algo`: stable sorts, searches, partition, top-k, lazy combinatorics, edit distances, hashing helpers (FNV-1a, Murmur3, SplitMix).
 - ✅ `Std.Random`: xoshiro256\*\* seeded via SplitMix64 (reference stream verified), unbiased bounded draws, sampling, weights, Gaussian, UUIDs, jump-based `Fork`.
 - ✅ Deterministic software maths core (`SoftMath`, Doc 7 D7): fdlibm exp/log/trig/atan with exact Payne–Hanek reduction for huge arguments (2/π computed with Machin's formula at start-up), checked against the platform by property tests.
-- ⬜ `Std.Math` and `Std.Stats` (on top of `SoftMath`), `Std.Text`, `Std.Binary`, `Std.Compress`, `Std.Time`, `Std.Path`, `Std.Net`, `Std.Graph`, `Std.Data`, `Std.Game`, `Std.Test`.
+- ✅ `Std.Math`: int/float functions on `SoftMath`, number theory (deterministic Miller–Rabin, Pollard–Brent factorisation, modular arithmetic, `Checked*`), `BigInt`, `Rational`, `Complex`, `Fixed` (Q32.32), `Vector2`/`Vector3`, `Matrix3x2`/`Matrix4x4`, `Rect`, `Circle`, `Polygon`, segment/hull helpers. Native value types compare by value (`==`, `Equals`, collection keys) through `IStructuralState`.
+- ✅ `Std.Stats`: mean/median/mode/variance/percentiles (compensated summation), `Describe`, histograms, correlation, least-squares regression, moving averages, z-score and IQR outliers, streaming `RunningStats`.
+- ⬜ `Std.Text`, `Std.Binary`, `Std.Compress`, `Std.Time`, `Std.Path`, `Std.Net`, `Std.Graph`, `Std.Data`, `Std.Game`, `Std.Test`.
 - ⬜ Deferred into M2b from M2: async iterators; Stryker.NET mutation testing in CI.
 - **Exit:** every declared native is implemented (link-checked in CI) and each namespace has behavioural tests run through the VM.
-  🟡 Link check in place (`StdLibraryTests`: no missing and no orphan natives, library compiles without diagnostics); behavioural tests for the four finished namespaces.
+  🟡 Link check in place (`StdLibraryTests`: no missing and no orphan natives, library compiles without diagnostics); behavioural tests for the six finished namespaces.
 
 ### M3. Drivers & system libraries — ⬜ Not started — *Doc 3 §3.1, Doc 5 §2*
 - `IKernelDriver` + device-class interfaces; `Sys.Hardware` binding metered by the cost model.
@@ -202,6 +204,7 @@ Items consciously postponed while building; each has a target milestone so nothi
 | Doc 7 examples that use system libraries (`Net`, `CForms`) are parsed in tests but not yet type-checked | M2 | M3–M5 |
 | `foreach` cannot deconstruct tuples (`foreach (var (k, v) in map)`); use `entry.Item1` / `entry.Item2` | M2b | Language polish, before M5 (IDE) |
 | Generic arguments are erased at run time, so `Map<string, int>` and `Map<int, int>` share a runtime class (consistent with the M2 type-test limitation) | M2b | Documented limitation |
+| `==` on *user* classes implementing `Equatable<T>` still compares references (Doc 7 §6 says it should call `Equals`); collections and native value types already honour equality | M2b | Language polish, before M5 |
 | Rollback snapshots a whole native collection the first time an event mutates it (O(n) host time, never charged as steps); per-operation undo would be cheaper for very large collections | M2b | Revisit with M3 profiling |
 
 ## Testing strategy (applies to every milestone)

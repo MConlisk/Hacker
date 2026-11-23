@@ -73,3 +73,17 @@ public sealed class VersionedIterator(NativeState owner, IEnumerator<Value> inne
         return inner.MoveNext();
     }
 }
+
+/// <summary>
+/// Immutable host values with value semantics (BigInt, Rational, vectors, shapes…): == , Equals, collection keys and
+/// ordering use these members instead of identity.
+/// </summary>
+public interface IStructuralState
+{
+    bool StructurallyEquals(IStructuralState other);
+
+    long StructuralHash();
+
+    /// <summary>Ordering against another value of the same kind, or null when the kind is unordered.</summary>
+    int? StructuralCompare(IStructuralState other) => null;
+}

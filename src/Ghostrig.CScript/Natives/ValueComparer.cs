@@ -127,6 +127,9 @@ public sealed class ValueComparer : IEqualityComparer<Value>, IComparer<Value>
                 }
 
                 return a.Items.Length.CompareTo(b.Items.Length);
+            case (ObjectInstance { NativeState: IStructuralState a }, ObjectInstance { NativeState: IStructuralState b })
+                when a.StructuralCompare(b) is { } order:
+                return Math.Sign(order);
             case (ObjectInstance a, _):
                 EnsureSlots();
                 if (a.Class.Implements(_comparable!))

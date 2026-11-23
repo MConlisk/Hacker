@@ -873,6 +873,7 @@ public sealed partial class VirtualMachine
             (string a, string b) => string.Equals(a, b, StringComparison.Ordinal),
             (BytesObject a, BytesObject b) => a.Equals(b),
             (TupleObject a, TupleObject b) => a.Items.Length == b.Items.Length && a.Items.Zip(b.Items).All(p => ValuesEqual(p.First, p.Second)),
+            (ObjectInstance { NativeState: Natives.IStructuralState a }, ObjectInstance { NativeState: Natives.IStructuralState b }) => a.StructurallyEquals(b),
             (ObjectInstance { Class.IsStruct: true } a, ObjectInstance { Class.IsStruct: true } b) =>
                 ReferenceEquals(a.Class, b.Class) && a.Fields.Zip(b.Fields).All(p => ValuesEqual(p.First, p.Second)),
             _ => ReferenceEquals(x.Object, y.Object),

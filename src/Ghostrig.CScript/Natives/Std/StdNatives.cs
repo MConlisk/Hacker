@@ -10,5 +10,8 @@ public static class StdNatives
         SeqNatives.Register(registry);
         AlgoNatives.Register(registry);
         RandomNatives.Register(registry);
+        MathNatives.Register(registry);
+        GeometryNatives.Register(registry);
+        StatsNatives.Register(registry);
     }
 }

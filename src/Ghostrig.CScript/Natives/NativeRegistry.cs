@@ -148,6 +148,7 @@ public static class StableHash
         string s => Of(s),
         BytesObject b => Of(b.Data),
         TupleObject t => t.Items.Aggregate(17L, (h, v) => unchecked((h * 31) + Of(v, identity))),
+        ObjectInstance { NativeState: IStructuralState s } => s.StructuralHash(),
         ObjectInstance { Class.IsStruct: true } s => s.Fields.Aggregate(19L, (h, v) => unchecked((h * 31) + Of(v, identity))),
         RuntimeClass when value.Tag == ValueTag.Enum => unchecked(value.Bits * GoldenRatio),
         null => value.Tag == ValueTag.Null ? 0 : unchecked((value.Bits * GoldenRatio) ^ (long)value.Tag),
