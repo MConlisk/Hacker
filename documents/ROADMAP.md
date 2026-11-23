@@ -10,7 +10,7 @@
 |---|---|---|
 | M0 Repository & toolchain | ✅ Done | .NET 8 solution, strict build settings, xUnit + FsCheck, GitHub Actions CI. |
 | M1 Headless kernel core | ✅ Done | `src/Ghostrig.Kernel`, 80 passing tests. Carried forward: per-process step budgets and the scheduler move into M2 with the VM; the `Net`/`Fs` libraries billing transfers through drivers is M3; Stryker.NET mutation runs are not yet wired into CI. |
-| M2 CScript language | ⏭ Next | Starts with the CScript Language Specification (Document 7). |
+| M2 CScript language | 🟡 In progress | Document 7 (language spec + standard library catalog) drafted for review; compiler/VM next. |
 
 ## Guiding principles for the build
 
@@ -62,7 +62,8 @@ tools/
 ## Phase 2 — The programmable machine
 
 ### M2. CScript language — *Doc 3 §2.1–2.2*
-- **Prerequisite:** write the CScript Language Specification (grammar, types, modules, attributes like `@Driver`, imports, syscall surface). *This document does not exist yet and is the first gap to close.*
+- **Prerequisite:** the CScript Language Specification — [Document 7](07-cscript-language.md) (drafted).
+- Native standard library (Doc 7 §13.1–13.14) implemented with published step-cost tables; system libraries (§13.15–13.16) arrive with M3–M5.
 - Lexer, parser, AST, static type and capability checks, structured diagnostics.
 - Bytecode compiler and step-metered VM; per-event step budgets; process suspension.
 - Copy-on-write rollback snapshots; atomic hot-swap with automatic revert.
@@ -139,7 +140,7 @@ tools/
 
 | Gap | Needed by |
 |---|---|
-| CScript Language Specification (new Document 7) | M2 |
+| ~~CScript Language Specification (Document 7)~~ — drafted, awaiting review | M2 |
 | Concrete `hardware.json` numbers and the cost constants ($C_{arb}$, $C_{irq}$, $C_{mem}$, transfer multipliers) tuned so the story's timings hold (e.g., the 4-hour vs. seconds crack) | M1 tuning, M7 |
 | Full world manifests (every host, file, and credential) for Acts II–IV | M8–M10 |
 | Mini-game designs (asteroid shooter, circuit routing, signal decoding, grid defense) — original designs | M7–M9 |

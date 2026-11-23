@@ -1,6 +1,6 @@
 # GHOSTRIG — Dialog & Event-Driven Narrative Architecture
 
-*Document 4 of 6 — Architecture: Macro-Timeline Spine, Action-Choice DAG & Kernel Telemetry Listeners*
+*Document 4 of 7 — Architecture: Macro-Timeline Spine, Action-Choice DAG & Kernel Telemetry Listeners*
 
 ---
 

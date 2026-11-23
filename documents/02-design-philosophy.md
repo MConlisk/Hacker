@@ -1,6 +1,6 @@
 # GHOSTRIG — Design Philosophy & Engineering Consistencies
 
-*Core Architecture & Runtime Specification — Document 2 of 6*
+*Core Architecture & Runtime Specification — Document 2 of 7*
 
 ---
 
@@ -12,7 +12,7 @@ The codebase enforces a strict separation between the host operating-system core
 
 - **Kernel (`Ghostrig.Kernel`):** The sole authority on simulated hardware state, capability enforcement, step scheduling, and deterministic resource billing.
 - **Desktop Shell:** The window manager, taskbar, application launcher, audio synthesizer output, and host frame presenter are implemented in C# to ensure a responsive, stable host interface.
-- **System Libraries & CForms Primitives:** Core OS services (`Gfx`, `Input`, `Fs`, `Net`, `Proc`, `Log`, `Sys`, `Media`, `Shop`, `Account`) and UI control primitives (`Form`, `Panel`, `Label`, `Button`, `TextBox`, `ListView`, `Canvas`, `MediaView`) are written in C#. They form the system-call boundary: CScript code invokes these libraries to render controls, access files, decode media, and transmit packets, and every call routes through the kernel to incur deterministic hardware costs.
+- **System Libraries & CForms Primitives:** Core OS services (`Gfx`, `Input`, `Fs`, `Net`, `Proc`, `Log`, `Sys`, `Media`, `Shop`, `Account`) and UI control primitives (`Form`, `Panel`, `Label`, `Button`, `TextBox`, `ListView`, `Canvas`, `MediaView`, plus the extended controls catalogued in Document 7 §13.16) are written in C#. They form the system-call boundary: CScript code invokes these libraries to render controls, access files, decode media, and transmit packets, and every call routes through the kernel to incur deterministic hardware costs.
 
 ### Applications, Websites & Drivers (CScript)
 

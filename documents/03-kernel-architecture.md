@@ -1,6 +1,6 @@
 # GHOSTRIG — Kernel Architecture & Runtime Specification
 
-*Document 3 of 6 — Runtime: C# Kernel & System Libraries / CScript Userland & Drivers*
+*Document 3 of 7 — Runtime: C# Kernel & System Libraries / CScript Userland & Drivers*
 
 ---
 

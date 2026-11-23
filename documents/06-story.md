@@ -1,6 +1,6 @@
 # GHOSTRIG — Story
 
-*Document 6 of 6 — Narrative Script (Bare-Metal Mode narration)*
+*Document 6 of 7 — Narrative Script (Bare-Metal Mode narration)*
 
 > This script narrates the Bare-Metal Mode experience. Silicon & Bus and Street Ghost modes follow the same beats with the presentation differences described in Document 4, §2. The game clock never pauses: every scene runs in live time, including time spent in the CScript IDE. Kompromat (leverage) is never handed to Kael in these scenes — the player must find it on their own — but the endings depend on it (see the Act IV preamble).
 

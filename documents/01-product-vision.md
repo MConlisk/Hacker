@@ -1,6 +1,6 @@
 # GHOSTRIG — Game Description & Product Vision
 
-*Product & Systems Design Specification — Document 1 of 6*
+*Product & Systems Design Specification — Document 1 of 7*
 
 ---
 

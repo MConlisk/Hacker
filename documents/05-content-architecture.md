@@ -1,6 +1,6 @@
 # GHOSTRIG — Content Architecture & World Data Specification
 
-*Document 5 of 6 — Scope: Hardware Catalog, `.drv` CScript Drivers, IP-Bound VFS Internet, Search, Media & Kompromat Assets*
+*Document 5 of 7 — Scope: Hardware Catalog, `.drv` CScript Drivers, IP-Bound VFS Internet, Search, Media & Kompromat Assets*
 
 ---
 
