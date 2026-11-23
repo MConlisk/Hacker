@@ -8,8 +8,8 @@
 | 4 | [Dialog & Event-Driven Narrative Architecture](04-dialog-narrative-architecture.md) | Storylets, action DAG, leverage rules, ending resolution |
 | 5 | [Content Architecture & World Data Specification](05-content-architecture.md) | Hardware catalog, drivers, hosts, file types, kompromat |
 | 6 | [Story](06-story.md) | Full narrative script, Acts I–IV and all endings |
-| 7 | [CScript Language Specification](07-cscript-language.md) | Language, runtime contract, capabilities, standard library catalog *(draft for review)* |
+| 7 | [CScript Language Specification](07-cscript-language.md) | Language, runtime contract, capabilities, standard library catalog |
 
-- [ROADMAP.md](ROADMAP.md): development milestones from foundations to release.
+- [ROADMAP.md](ROADMAP.md): development milestones, what is done (✅) and what is next, deferred items.
 - [RESOLUTIONS.md](RESOLUTIONS.md): every inconsistency found in the original PDFs and how it was resolved.
 - [original/](original/): the source PDFs as originally supplied.
