@@ -63,10 +63,15 @@ public sealed class Compilation
         var binder = new DeclarationBinder(this, diagnostics);
         var modules = binder.Bind();
         var wellKnown = References.FirstOrDefault()?.WellKnown ?? WellKnownTypes.From(modules);
-        return new BindResult(modules, [.. diagnostics], wellKnown);
+        var program = new Binding.ProgramBinder(wellKnown, diagnostics).Bind(modules);
+        return new BindResult(modules, [.. diagnostics], wellKnown, program);
     }
 
-    private sealed record BindResult(ImmutableArray<ModuleSymbol> Modules, ImmutableArray<Diagnostic> Diagnostics, WellKnownTypes WellKnown);
+    /// <summary>The bound bodies of every function in this compilation (input to code generation).</summary>
+    public BoundProgram Program => _bound.Value.Program;
+
+    private sealed record BindResult(ImmutableArray<ModuleSymbol> Modules, ImmutableArray<Diagnostic> Diagnostics, WellKnownTypes WellKnown,
+        BoundProgram Program);
 }
 
 /// <summary>The built-in declaration files compiled once and shared by every user compilation.</summary>

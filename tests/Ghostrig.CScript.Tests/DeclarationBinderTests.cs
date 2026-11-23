@@ -107,13 +107,13 @@ public class DeclarationBinderTests
         AssertClean(Compile("""
             module Boxes;
             class Box<T> where T : Comparable<T> { T Value; }
-            Box<int> a;
-            Box<string> b;
+            Box<int>? a;
+            Box<string>? b;
             """));
         AssertError(Compile("""
             module Boxes;
             class Box<T> where T : Comparable<T> { T Value; }
-            Box<Args> c;
+            Box<Args>? c;
             """), "CSC3006");
     }
 
@@ -168,17 +168,17 @@ public class DeclarationBinderTests
     {
         var a = SyntaxTree.Parse("module Lib.Alpha; class Node { }");
         var b = SyntaxTree.Parse("module Lib.Beta; class Node { }");
-        AssertClean(Compilation.Create(a, b, SyntaxTree.Parse("module App; import Lib.Alpha; import Lib.Beta as B; Alpha.Node x; B.Node y; Lib.Beta.Node z;")));
-        AssertError(Compilation.Create(a, b, SyntaxTree.Parse("module App; import Lib.Alpha; import Lib.Beta; Node n;")), "CSC3004");
-        AssertError(Compilation.Create(a, b, SyntaxTree.Parse("module App; Node n;")), "CSC3003");
+        AssertClean(Compilation.Create(a, b, SyntaxTree.Parse("module App; import Lib.Alpha; import Lib.Beta as B; Alpha.Node? x; B.Node? y; Lib.Beta.Node? z;")));
+        AssertError(Compilation.Create(a, b, SyntaxTree.Parse("module App; import Lib.Alpha; import Lib.Beta; Node? n;")), "CSC3004");
+        AssertError(Compilation.Create(a, b, SyntaxTree.Parse("module App; Node? n;")), "CSC3003");
     }
 
     [Fact]
     public void Private_types_are_invisible_to_importers()
     {
         var lib = SyntaxTree.Parse("module Lib; private class Secret { } class Open { }");
-        AssertClean(Compilation.Create(lib, SyntaxTree.Parse("module App; import Lib; Open o;")));
-        AssertError(Compilation.Create(lib, SyntaxTree.Parse("module App; import Lib; Secret s;")), "CSC3003");
+        AssertClean(Compilation.Create(lib, SyntaxTree.Parse("module App; import Lib; Open? o;")));
+        AssertError(Compilation.Create(lib, SyntaxTree.Parse("module App; import Lib; Secret? s;")), "CSC3003");
     }
 
     [Fact]
@@ -195,7 +195,7 @@ public class DeclarationBinderTests
         Compilation With(params SyntaxTree[] trees) => Compilation.Create(trees, [StandardLibrary.Default, natives]);
         var helper = SyntaxTree.Parse("module FileHelper; import Fs;", "/lib/user/FileHelper.csc");
 
-        AssertClean(With(SyntaxTree.Parse("@App(\"Notes\") module Notes; import Fs;", "/apps/Notes.csc")));
+        AssertClean(With(SyntaxTree.Parse("@App(\"Notes\") module Notes; import Fs; void Main(Args args) { }", "/apps/Notes.csc")));
         AssertClean(With(SyntaxTree.Parse("module NetCardDriver; import Sys.Hardware;", "/sys/drivers/net/NetCardDriver.drv")));
 
         var page = With(helper, SyntaxTree.Parse("module index; import FileHelper;", "/srv/www/public/index.cform"));
@@ -210,7 +210,7 @@ public class DeclarationBinderTests
     public void Module_kind_is_derived_from_extension_and_attributes()
     {
         var compilation = Compilation.Create(
-            SyntaxTree.Parse("@App(\"A\") module A;", "/apps/A.csc"),
+            SyntaxTree.Parse("@App(\"A\") module A; void Main(Args args) { }", "/apps/A.csc"),
             SyntaxTree.Parse("module B;", "/lib/user/B.csc"),
             SyntaxTree.Parse("module C;", "/sys/drivers/C.drv"),
             SyntaxTree.Parse("module index;", "/srv/www/public/index.cform"),

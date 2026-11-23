@@ -91,7 +91,8 @@ public class TypeSystemTests
         yield return [PrimitiveType.Int, PrimitiveType.Float, ConversionKind.ImplicitNumeric];
         yield return [PrimitiveType.Float, PrimitiveType.Int, ConversionKind.ExplicitNumeric];
         yield return [PrimitiveType.Int, PrimitiveType.Byte, ConversionKind.ExplicitNumeric];
-        yield return [NullTypeSymbol.Instance, PrimitiveType.String, ConversionKind.NullLiteral];
+        yield return [NullTypeSymbol.Instance, PrimitiveType.String, ConversionKind.None];
+        yield return [NullTypeSymbol.Instance, NullableTypeSymbol.Create(PrimitiveType.String), ConversionKind.NullLiteral];
         yield return [NullTypeSymbol.Instance, PrimitiveType.Int, ConversionKind.None];
         yield return [NullTypeSymbol.Instance, NullableTypeSymbol.Create(PrimitiveType.Int), ConversionKind.NullLiteral];
         yield return [PrimitiveType.Int, NullableTypeSymbol.Create(PrimitiveType.Int), ConversionKind.ImplicitNullable];

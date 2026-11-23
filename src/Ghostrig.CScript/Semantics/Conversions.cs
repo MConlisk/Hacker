@@ -8,7 +8,7 @@ public enum ConversionKind
     /// <summary>Widening numeric: byte→int, char→int, byte/int→float.</summary>
     ImplicitNumeric,
 
-    /// <summary><c>null</c> to any reference or nullable type.</summary>
+    /// <summary><c>null</c> to a nullable type (<c>T?</c>); non-nullable references never accept null (Doc 7 §4.3).</summary>
     NullLiteral,
 
     /// <summary><c>T</c> → <c>T?</c> (and <c>U</c> → <c>T?</c> when <c>U</c> → <c>T</c>).</summary>
@@ -93,7 +93,7 @@ public static class Conversions
 
         if (from is NullTypeSymbol)
         {
-            return to.IsReferenceType || to is NullableTypeSymbol ? new(ConversionKind.NullLiteral) : Conversion.None;
+            return to is NullableTypeSymbol ? new(ConversionKind.NullLiteral) : Conversion.None;
         }
 
         if (to is NullableTypeSymbol nullableTarget)
