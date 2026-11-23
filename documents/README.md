@@ -9,5 +9,6 @@
 | 5 | [Content Architecture & World Data Specification](05-content-architecture.md) | Hardware catalog, drivers, hosts, file types, kompromat |
 | 6 | [Story](06-story.md) | Full narrative script, Acts I–IV and all endings |
 
+- [ROADMAP.md](ROADMAP.md): development milestones from foundations to release.
 - [RESOLUTIONS.md](RESOLUTIONS.md): every inconsistency found in the original PDFs and how it was resolved.
 - [original/](original/): the source PDFs as originally supplied.
