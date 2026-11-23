@@ -316,7 +316,10 @@ public static class CoreNatives
         F("Array.get_Item/1", (c, a) => A(a[0])[Index(c, A(a[0]), a[1].Bits)]);
         F("Array.set_Item/2", (c, a) =>
         {
-            A(a[0])[Index(c, A(a[0]), a[1].Bits)] = a[2];
+            var items = A(a[0]);
+            var index = Index(c, items, a[1].Bits);
+            c.MutatingArray(items);
+            items[index] = a[2];
             return Value.Null;
         });
         F("Array.Slice/2", (c, a) => SliceArray(c, A(a[0]), a[1].Bits, a[2].Bits));
@@ -337,6 +340,7 @@ public static class CoreNatives
         F("Array.Fill/1", (c, a) =>
         {
             c.Charge(A(a[0]).Length / 4);
+            c.MutatingArray(A(a[0]));
             Array.Fill(A(a[0]), a[1]);
             return Value.Null;
         });

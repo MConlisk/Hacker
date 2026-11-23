@@ -26,6 +26,9 @@ public sealed class Frame
     /// <summary>Set for frames that run an iterator body.</summary>
     internal GeneratorObject? Generator { get; set; }
 
+    /// <summary>Set for the bottom frame of an async iterator's fiber.</summary>
+    internal AsyncGeneratorObject? AsyncGenerator { get; set; }
+
     /// <summary>Marks the frame entered by a synchronous host callback; returning from it ends the nested run.</summary>
     internal bool IsBarrier { get; set; }
 
@@ -78,6 +81,9 @@ public sealed class Fiber
     /// <summary>The task this fiber completes (async functions); null for event and synchronous fibers.</summary>
     public TaskObject? Task { get; internal set; }
 
+    /// <summary>The async iterator this fiber runs, if any (its faults go to the pending MoveNextAsync task).</summary>
+    internal AsyncGeneratorObject? AsyncGenerator { get; set; }
+
     /// <summary>Step budget per run segment (Doc 7 §8.5); null means unlimited (workers, async continuations of workers).</summary>
     public long? Budget { get; internal set; }
 
@@ -104,9 +110,13 @@ public sealed class Fiber
 /// <summary>Records overwritten values so a faulted event can be rolled back (Doc 7 §8.6).</summary>
 internal sealed class Journal
 {
+    private static long s_epochs;
     private readonly List<Action> _undo = [];
 
     public int Count => _undo.Count;
+
+    /// <summary>Identifies the current segment; native state snapshots at most once per epoch (see <see cref="Natives.NativeState"/>).</summary>
+    public long Epoch { get; private set; } = Interlocked.Increment(ref s_epochs);
 
     public void Record(Action undo) => _undo.Add(undo);
 
@@ -118,9 +128,14 @@ internal sealed class Journal
         }
 
         _undo.Clear();
+        Epoch = Interlocked.Increment(ref s_epochs);
     }
 
-    public void Commit() => _undo.Clear();
+    public void Commit()
+    {
+        _undo.Clear();
+        Epoch = Interlocked.Increment(ref s_epochs);
+    }
 }
 
 public enum FaultKind

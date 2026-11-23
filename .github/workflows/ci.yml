@@ -3,6 +3,9 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1" # weekly full mutation run (Monday 03:17 UTC)
 
 jobs:
   build-and-test:
@@ -18,3 +21,39 @@ jobs:
         run: dotnet build Ghostrig.sln --configuration Release --no-restore
       - name: Test
         run: dotnet test Ghostrig.sln --configuration Release --no-build --verbosity normal
+
+  # Mutation testing (Stryker.NET) keeps the test suites honest (ROADMAP: testing strategy).
+  # Pull requests mutate only the files they change; the weekly schedule and manual runs mutate everything.
+  mutation:
+    needs: build-and-test
+    if: github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [Ghostrig.Kernel.Tests, Ghostrig.CScript.Tests]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Restore tools
+        run: dotnet tool restore
+      - name: Mutate changed files (pull request)
+        if: github.event_name == 'pull_request'
+        working-directory: tests/${{ matrix.suite }}
+        run: dotnet stryker --since:origin/${{ github.base_ref }}
+      - name: Mutate everything (scheduled or manual)
+        if: github.event_name != 'pull_request'
+        working-directory: tests/${{ matrix.suite }}
+        run: dotnet stryker
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report-${{ matrix.suite }}
+          path: tests/${{ matrix.suite }}/StrykerOutput/**/reports/
+          if-no-files-found: ignore

@@ -10,13 +10,70 @@ namespace Ghostrig.CScript.Vm;
 public sealed class NativeContext
 {
     private readonly VirtualMachine _vm;
+    private Natives.ValueComparer? _comparer;
 
     internal NativeContext(VirtualMachine vm) => _vm = vm;
+
+    /// <summary>Equality, hashing and ordering shared by every standard-library collection.</summary>
+    public Natives.ValueComparer Comparer => _comparer ??= new Natives.ValueComparer(this);
+
+    /// <summary>A class declared in any module (Core, Std.*, system libraries).</summary>
+    public RuntimeClass Class(string module, string name) =>
+        Image.Linker.GetClass(Image.Linker.Compilation.GetModule(module)?.Lookup(name).OfType<Semantics.NamedTypeSymbol>().FirstOrDefault()
+                              ?? throw new InvalidOperationException($"Type '{module}.{name}' not found."));
+
+    /// <summary>Creates an instance of a native class backed by host state.</summary>
+    public Value NewInstance(RuntimeClass runtimeClass, object state)
+    {
+        var instance = runtimeClass.CreateInstance();
+        instance.NativeState = state;
+        return Value.FromObject(instance);
+    }
+
+    /// <summary>Host state behind a native instance (null receivers throw NullError).</summary>
+    public T State<T>(Value value) where T : class => value.Object switch
+    {
+        ObjectInstance { NativeState: T state } => state,
+        NativeObject { State: T state } => state,
+        null => throw Throw("NullError", "Member accessed on a null value."),
+        _ => throw Throw("CastError", $"Expected a native {typeof(T).Name.Replace("State", string.Empty, StringComparison.Ordinal)}."),
+    };
+
+    /// <summary>Call before mutating native state: journals it for rollback and invalidates live iterators.</summary>
+    public void Mutating(Natives.NativeState state)
+    {
+        _vm.JournalNativeState(state);
+        state.Touch();
+    }
+
+    /// <summary>Call before a native rewrites a script array in place, so a faulted event restores it.</summary>
+    public void MutatingArray(Value[] items) => _vm.JournalArray(items);
+
+    /// <summary>Iterator over a native collection that fails fast on concurrent modification.</summary>
+    public Value NewIterator(Natives.NativeState owner, IEnumerable<Value> items, long stepsPerItem = 1) =>
+        Value.FromObject(new NativeObject(Image.NativeIteratorClass, new Natives.VersionedIterator(owner, items.GetEnumerator(), stepsPerItem)));
+
+    internal TaskObject MoveNextAsync(AsyncGeneratorObject generator) => _vm.ResumeAsyncGenerator(generator);
+
+    internal Callable ResolveVirtual(int slot, Value receiver) => _vm.ResolveVirtual(slot, receiver);
+
+    /// <summary>Invokes a function value with as many arguments as it declares (lambdas may ignore trailing ones).</summary>
+    public Value Call(Value function, params Value[] arguments) =>
+        function.Object is FunctionObject f ? Invoke(f, arguments) : throw Throw("NullError", "Function value is null.");
 
     public ProgramImage Image => _vm.Image;
 
     /// <summary>Current simulated time in nanoseconds.</summary>
     public long Now => _vm.Host.Now;
+
+    /// <summary>Steps executed by this VM so far (instructions plus native charges).</summary>
+    public long StepsExecuted => _vm.Steps;
+
+    /// <summary>Appends a line to the VM's trace log (Debug.Trace).</summary>
+    public void Trace(string line) => _vm.TraceLog.Add(line);
+
+    /// <summary>Signals a script breakpoint to the host debugger.</summary>
+    public void Breakpoint() => _vm.OnBreakpoint();
 
     /// <summary>Charges additional steps for work proportional to input size (Doc 7 §8.4 published costs).</summary>
     public void Charge(long steps) => _vm.ChargeNative(steps);

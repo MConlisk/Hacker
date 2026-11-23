@@ -664,6 +664,16 @@ public sealed partial class VirtualMachine
                 return ExecStatus.Suspended;
             }
 
+            case OpCode.Yield when frame.AsyncGenerator is { } asyncGenerator:
+            {
+                asyncGenerator.Current = frame.Pop();
+                var pending = asyncGenerator.Pending;
+                asyncGenerator.Pending = null;
+                fiber.State = FiberState.Waiting;
+                pending?.TryComplete(Value.True);
+                return ExecStatus.Suspended;
+            }
+
             case OpCode.Yield:
             {
                 var value = frame.Pop();
@@ -685,6 +695,16 @@ public sealed partial class VirtualMachine
     {
         barrierResult = Value.Null;
         fiber.Frames.RemoveAt(fiber.Frames.Count - 1);
+
+        if (frame.AsyncGenerator is { } asyncGenerator)
+        {
+            asyncGenerator.Finished = true;
+            var pending = asyncGenerator.Pending;
+            asyncGenerator.Pending = null;
+            fiber.State = FiberState.Completed;
+            pending?.TryComplete(Value.False);
+            return ExecStatus.Completed;
+        }
 
         if (frame.Generator is { } generator)
         {
@@ -873,6 +893,7 @@ public sealed partial class VirtualMachine
             (string a, string b) => string.Equals(a, b, StringComparison.Ordinal),
             (BytesObject a, BytesObject b) => a.Equals(b),
             (TupleObject a, TupleObject b) => a.Items.Length == b.Items.Length && a.Items.Zip(b.Items).All(p => ValuesEqual(p.First, p.Second)),
+            (ObjectInstance { NativeState: Natives.IStructuralState a }, ObjectInstance { NativeState: Natives.IStructuralState b }) => a.StructurallyEquals(b),
             (ObjectInstance { Class.IsStruct: true } a, ObjectInstance { Class.IsStruct: true } b) =>
                 ReferenceEquals(a.Class, b.Class) && a.Fields.Zip(b.Fields).All(p => ValuesEqual(p.First, p.Second)),
             _ => ReferenceEquals(x.Object, y.Object),

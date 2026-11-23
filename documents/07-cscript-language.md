@@ -2,7 +2,7 @@
 
 *Document 7 of 7 — Language, Runtime Contract & Standard Library*
 
-> **Status: approved design decisions (D1–D7); implementation in progress (M2).** This document defines the language players read and write for every application, website, library and driver in GHOSTRIG. It binds Documents 2, 3 and 5.
+> **Status: approved design decisions (D1–D7); language, compiler and VM implemented (M2); standard library implemented (M2b).** This document defines the language players read and write for every application, website, library and driver in GHOSTRIG. It binds Documents 2, 3 and 5.
 
 ---
 
@@ -345,6 +345,8 @@ Driver entry points are synchronous (§5.6). Cache accounting is done by the sim
 
 ## 13. Standard library catalog
 
+> **Implementation note (M2b):** each namespace below is declared in `src/Ghostrig.CScript/Stdlib/Std.*.csd`; those declaration files (signatures, documentation and step costs) are what the IDE API browser shows and are the authoritative contract. Where the implementation deliberately differs from this catalog, the difference is recorded under *Deferred items and known limitations* in the [roadmap](ROADMAP.md).
+
 The standard library is broad on purpose: players should be able to write real tools, games, servers and exploits without reinventing basics. Everything under `Std.*` is pure (no side effects outside the process) and available to every module kind. System libraries are capability-gated (§10) and billed through drivers.
 
 ### 13.1 Core (auto-imported)
@@ -583,6 +585,7 @@ The full grammar, including expressions and the operator precedence of §6, is g
 module NetCardDriver;
 
 import Sys.Hardware;
+import Std.Math;
 
 void Initialize(DriverContext ctx) { }
 void Shutdown() { }
@@ -633,6 +636,9 @@ void Main(Args args) {
 /// A minimal least-recently-used cache, written by hand to show generics.
 /// (Std.Collections.LruCache is the production version.) Publishable to CS-Vault as kael/mini_lru 1.0.0.
 module mini_lru;
+
+import Std.Collections;
+import Std.Seq;
 
 class MiniLru<K, V> where K : Hashable {
     private Map<K, V> items = new Map<K, V>();

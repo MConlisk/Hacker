@@ -17,10 +17,11 @@ public sealed class NativeRegistry
     {
         var registry = new NativeRegistry();
         CoreNatives.Register(registry);
+        Std.StdNatives.Register(registry);
         return registry;
     });
 
-    /// <summary>Core library natives only.</summary>
+    /// <summary>Core and standard-library (<c>Std.*</c>) natives; hosts add system libraries with <see cref="With"/>.</summary>
     public static NativeRegistry Default => LazyDefault.Value;
 
     public IEnumerable<string> Keys => _functions.Keys.Order(StringComparer.Ordinal);
@@ -147,6 +148,7 @@ public static class StableHash
         string s => Of(s),
         BytesObject b => Of(b.Data),
         TupleObject t => t.Items.Aggregate(17L, (h, v) => unchecked((h * 31) + Of(v, identity))),
+        ObjectInstance { NativeState: IStructuralState s } => s.StructuralHash(),
         ObjectInstance { Class.IsStruct: true } s => s.Fields.Aggregate(19L, (h, v) => unchecked((h * 31) + Of(v, identity))),
         RuntimeClass when value.Tag == ValueTag.Enum => unchecked(value.Bits * GoldenRatio),
         null => value.Tag == ValueTag.Null ? 0 : unchecked((value.Bits * GoldenRatio) ^ (long)value.Tag),
