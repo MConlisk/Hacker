@@ -1,2 +1,4 @@
 # Hacker
-A cyberpunk hacking simulator
+A cyberpunk hacking simulator: **GHOSTRIG**.
+
+Design documents live in [`documents/`](documents/README.md).
