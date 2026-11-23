@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Ghostrig.Kernel</RootNamespace>
+    <Description>GHOSTRIG deterministic simulation kernel: clock, hardware bay, cost model, telemetry, thermals, VFS, network and event bus.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Ghostrig.Kernel.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "hosts": [
+    {
+      "address": "10.0.0.53",
+      "label": "ny56-root-dns",
+      "services": [
+        {
+          "port": 53,
+          "kind": "dns"
+        }
+      ],
+      "dns_records": [
+        {
+          "name": "verbena-and-rust.ny56",
+          "address": "10.56.14.88"
+        }
+      ]
+    }
+  ]
+}

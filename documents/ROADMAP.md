@@ -4,6 +4,14 @@
 
 ---
 
+## Status
+
+| Milestone | State | Notes |
+|---|---|---|
+| M0 Repository & toolchain | ✅ Done | .NET 8 solution, strict build settings, xUnit + FsCheck, GitHub Actions CI. |
+| M1 Headless kernel core | ✅ Done | `src/Ghostrig.Kernel`, 80 passing tests. Carried forward: per-process step budgets and the scheduler move into M2 with the VM; the `Net`/`Fs` libraries billing transfers through drivers is M3; Stryker.NET mutation runs are not yet wired into CI. |
+| M2 CScript language | ⏭ Next | Starts with the CScript Language Specification (Document 7). |
+
 ## Guiding principles for the build
 
 1. **Headless first.** Everything except presentation (kernel, CScript compiler/VM, VFS, network, narrative) is plain .NET 8 with no MonoGame dependency, so it can be unit-, property-, and replay-tested in CI (Doc 2 §5).

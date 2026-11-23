@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "hosts": [
+    {
+      "address": "10.56.14.88",
+      "label": "verbena-and-rust",
+      "resolver": "10.0.0.53",
+      "accounts": [
+        {
+          "user": "v.chen",
+          "password_hash": "sha256$$263ca24546071261add767aea301c80a9e5c31dae2a1f4e0af3c616c4956dd98",
+          "tier": "user"
+        },
+        {
+          "user": "root",
+          "password_hash": "sha256$vr$d82003386755af9142b17456d5d09df7c1b740293b270a44ba2bf0e7c9b5b3e9",
+          "tier": "root"
+        }
+      ],
+      "services": [
+        {
+          "port": 80,
+          "kind": "http",
+          "root": "/srv/www/public",
+          "access_log": "/var/log/httpd/access_2056_11.log",
+          "anonymous": true
+        },
+        {
+          "port": 2121,
+          "kind": "ftp",
+          "root": "/",
+          "access_log": "/var/log/httpd/auth_audit.log"
+        }
+      ],
+      "directories": [
+        {
+          "path": "/srv",
+          "acl": {
+            "entries": [
+              {
+                "tier": "guest",
+                "perms": "x"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/srv/www/public",
+          "acl": {
+            "entries": [
+              {
+                "tier": "guest",
+                "perms": "rx"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/var",
+          "acl": {
+            "entries": [
+              {
+                "tier": "guest",
+                "perms": "x"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/var/log",
+          "acl": {
+            "entries": [
+              {
+                "tier": "guest",
+                "perms": "x"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/var/log/httpd",
+          "acl": {
+            "entries": [
+              {
+                "user": "v.chen",
+                "perms": "rx"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/srv/ftp",
+          "acl": {
+            "entries": [
+              {
+                "tier": "user",
+                "perms": "x"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/srv/ftp/storefront",
+          "acl": {
+            "owner": "v.chen",
+            "entries": [
+              {
+                "user": "v.chen",
+                "perms": "rwx"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/.root_archive",
+          "acl": {
+            "entries": []
+          }
+        }
+      ],
+      "files": [
+        {
+          "path": "/srv/www/public/index.cform",
+          "text": "// Verbena & Rust storefront (CScript CForms page)\n@Page(\"Verbena & Rust - Bioluminescent Orchids\")\nmodule StorefrontIndex;\n\nimport CForms;\n\nForm Build() {\n    Form page = new Form(\"Verbena & Rust\");\n    page.Add(new Label(\"Bioluminescent orchids, grown above the waterline.\"));\n    page.Add(new Label(\"Same-day courier to every enclave above the seawall.\"));\n    page.Add(new Button(\"Browse the catalog\", \"/catalog_orchids.csv\"));\n    return page;\n}\n"
+        },
+        {
+          "path": "/srv/www/public/catalog_orchids.csv",
+          "text": "sku,name,glow_nm,price_credits,stock\nVR-001,Midnight Phalaenopsis,488,420,12\nVR-002,Seawall Cymbidium,510,385,7\nVR-003,Enclave Dendrobium,532,610,3\nVR-004,Tidewater Vanda,470,515,0\n"
+        },
+        {
+          "path": "/var/log/httpd/access_2056_11.log",
+          "text": "[2056-11-14T08:02:11] [anonymous] [10.56.90.14] [ANON_OK]\n[2056-11-14T09:15:47] [v.chen] [10.56.14.31] [LOGIN_OK]\n[2056-11-14T22:58:03] [anonymous] [10.13.88.6] [ANON_OK]\n[2056-11-15T07:44:20] [v.chen] [10.56.14.31] [LOGIN_OK]\n"
+        },
+        {
+          "path": "/var/log/httpd/auth_audit.log",
+          "text": "[2056-11-12T03:11:52] [root] [10.56.14.2] [LOGIN_OK]\n[2056-11-12T03:12:09] [root] [10.56.14.2] [STOR /.root_archive/orbital_freight_raw.csv]\n[2056-11-13T02:47:31] [root] [10.56.14.2] [LOGIN_OK]\n[2056-11-13T02:47:33] [root] [10.56.14.2] [DEBUG auth backend=legacy-svc hash=sha256$vr$d82003386755af9142b17456d5d09df7c1b740293b270a44ba2bf0e7c9b5b3e9]\n[2056-11-14T23:38:05] [v.chen] [10.13.88.6] [LOGIN_OK]\n[2056-11-14T23:40:51] [v.chen] [10.13.88.6] [LOGIN_FAIL]\n[2056-11-14T23:41:58] [root] [10.56.14.2] [LOGIN_OK]\n[2056-11-14T23:42:00] [root] [10.56.14.2] [STOR /.root_archive/manifest_tuesday_2342.txt]\n"
+        },
+        {
+          "path": "/srv/ftp/storefront/invoices_2056/march.csv",
+          "text": "invoice,date,client,item,qty,amount_credits\nINV-0301,2056-03-02,Halcyon Enclave,Midnight Phalaenopsis,4,1680\nINV-0302,2056-03-09,Sector 9 Atrium,Seawall Cymbidium,2,770\nINV-0303,2056-03-17,Halcyon Enclave,Enclave Dendrobium,1,610\n"
+        },
+        {
+          "path": "/srv/ftp/storefront/botanical_patents/notes.txt",
+          "text": "Synthetic flora notes - v.chen\nGFP-luciferin splice stable at 488nm. Root mass under 40g per specimen.\nPeat substrate per shipment should never exceed 2kg.\n"
+        },
+        {
+          "path": "/srv/ftp/storefront/supplier_manifests/q4.csv",
+          "text": "supplier,shipment,item,declared_kg,destination\nGowanus Peat Co,SM-4410,synthetic peat moss,1.8,Verbena & Rust (retail)\nGowanus Peat Co,SM-4411,synthetic peat moss,1.6,Verbena & Rust (retail)\n"
+        },
+        {
+          "path": "/.root_archive/orbital_freight_raw.csv",
+          "text": "shipment,date,declared_item,declared_kg,billed_credits,route\nAX-88120,2056-11-03,synthetic peat moss,4120,1840000,Pier 44 > Orbital Terminal 3\nAX-88131,2056-11-07,synthetic peat moss,3980,1795000,Pier 44 > Orbital Terminal 3\nAX-88147,2056-11-10,synthetic peat moss,4205,1902000,Pier 44 > Orbital Terminal 3\nAX-88152,2056-11-14,synthetic peat moss,4090,1866000,Pier 44 > Orbital Terminal 3\n"
+        },
+        {
+          "path": "/.root_archive/aegis_shell_ledger.enc",
+          "synthetic": {
+            "length": 24576,
+            "seed": 4401,
+            "alphabet": "binary"
+          }
+        },
+        {
+          "path": "/.root_archive/manifest_tuesday_2342.txt",
+          "text": "AEGIS LOGISTICS // CONSIGNMENT MANIFEST // ROUTED VIA VERBENA & RUST (shell 0x2F)\nX-Route-Origin: aegis-logistics.internal/pier-ops\nX-Billing-Parent: Aegis Logistics (OmniCorp Freight Division)\nlogged: 2056-11-14T23:42:00\n\nline  cargo_type                              qty  destination\n0001  synthetic peat moss                     40   Orbital Terminal 3\n0002  synthetic peat moss                     38   Orbital Terminal 3\n0003  BIO-ASSET-09 (UN-AUGMENTED / VIABLE)    1    Pier 44, Sub-Level B\n"
+        }
+      ]
+    }
+  ]
+}
