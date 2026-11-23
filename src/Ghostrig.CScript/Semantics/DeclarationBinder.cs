@@ -196,6 +196,11 @@ internal sealed class DeclarationBinder
             types.Add((decl, symbol));
             if (_compilation.References.IsEmpty)
             {
+                if (primitiveName == "array")
+                {
+                    ArrayTypeSymbol.MemberSource = symbol;
+                }
+
                 var p = PrimitiveType.All.FirstOrDefault(t => t.Name == primitiveName);
                 if (p is not null)
                 {

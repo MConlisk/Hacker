@@ -10,7 +10,8 @@
 |---|---|---|
 | M0 Repository & toolchain | ✅ Done | .NET 8 solution, strict build settings, xUnit + FsCheck, GitHub Actions CI. |
 | M1 Headless kernel core | ✅ Done | `src/Ghostrig.Kernel`, 80 passing tests. Carried forward: per-process step budgets and the scheduler move into M2 with the VM; the `Net`/`Fs` libraries billing transfers through drivers is M3; Stryker.NET mutation runs are not yet wired into CI. |
-| M2 CScript language | 🟡 In progress | Document 7 approved. Front end done: `src/Ghostrig.CScript` lexer, AST and parser (76 tests; every module sample in Docs 5 and 7 parses). Next: binder/type checker, bytecode compiler, step-metered VM with async/await. |
+| M2 CScript language | ✅ Done | `src/Ghostrig.CScript`: lexer, parser, type checker, bytecode compiler, step-metered VM (async/await fibers, iterators, exceptions, budgets with rollback, hot-swap with `@Persist`), disassembler, and every `Core` native. 201 tests. |
+| M2b Standard library (`Std.*`) | ⏭ Next | Doc 7 §13.2–13.14 as native declaration files + host implementations (collections incl. caches and Bloom filters, text, math, binary, graphs, data, games, testing). |
 
 ## Guiding principles for the build
 
@@ -68,6 +69,10 @@ tools/
 - Bytecode compiler and step-metered VM; per-event step budgets; process suspension.
 - Copy-on-write rollback snapshots; atomic hot-swap with automatic revert.
 - **Exit:** compile and run CScript programs under step budgets; infinite loops are suspended, faults roll back, and hot-swap reverts on failed initialization; fuzz/property tests on the parser.
+
+### M2b. Standard library — *Doc 7 §13.2–13.14*
+- One native declaration file per namespace (`Std.Collections`, `Std.Seq`, `Std.Algo`, `Std.Text`, `Std.Math`, `Std.Stats`, `Std.Random`, `Std.Binary`, `Std.Compress`, `Std.Time`, `Std.Path`, `Std.Net`, `Std.Graph`, `Std.Data`, `Std.Game`, `Std.Test`) plus deterministic, step-charged host implementations.
+- **Exit:** every declared native is implemented (link-checked in CI) and each namespace has behavioural tests run through the VM.
 
 ### M3. Drivers & system libraries — *Doc 3 §3.1, Doc 5 §2*
 - `IKernelDriver` + device-class interfaces; `Sys.Hardware` binding metered by the cost model.
