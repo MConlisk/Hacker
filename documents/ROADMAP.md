@@ -13,7 +13,7 @@
 | M0 Repository & toolchain | ✅ Done | `Ghostrig.sln`, `Directory.Build.props`, `.github/workflows/ci.yml` | CI green on every push and pull request |
 | M1 Headless kernel core | ✅ Done | `src/Ghostrig.Kernel`, `content/` | 80 tests (`tests/Ghostrig.Kernel.Tests`) |
 | M2 CScript language, compiler & VM | ✅ Done | `src/Ghostrig.CScript` | 201 tests (`tests/Ghostrig.CScript.Tests`) |
-| M2b Standard library (`Std.*`) | ⏭ Next | `src/Ghostrig.CScript/Stdlib`, `Natives` | — |
+| M2b Standard library (`Std.*`) | 🟡 In progress | `src/Ghostrig.CScript/Stdlib/Std.*.csd`, `Natives/Std` | 42 tests (`tests/Ghostrig.CScript.Tests/Std`); Collections, Seq, Algo, Random done |
 | M3 Drivers & system libraries | ⬜ Not started | — | — |
 | M4 MonoGame host shell | ⬜ Not started | — | — |
 | M5 Core applications | ⬜ Not started | — | — |
@@ -26,7 +26,7 @@
 | M12 CScript Portal | ⬜ Not started | — | — |
 | M13 Polish & release | ⬜ Not started | — | — |
 
-Merged pull requests: #1 (docs, M0, M1, CScript front end), #2 (type checker). Open: #3 (M2 bytecode compiler, VM, hot-swap).
+Merged pull requests: #1 (docs, M0, M1, CScript front end), #2 (type checker), #3 (M2 bytecode compiler, VM, hot-swap). M2b work continues on branch `ccr-b7b99d06-09w97q`.
 
 ## Guiding principles for the build
 
@@ -43,6 +43,7 @@ Entries marked ✅ exist today; the others are planned and named here so the lay
 src/
   Ghostrig.Kernel/        ✅ Simulation clock, cost model, hardware bay, thermals, VFS/ACL, network, DNS, event bus, save/load
   Ghostrig.CScript/       ✅ Lexer, parser, type checker, bytecode compiler, step-metered VM, Core natives, disassembler
+                          🟡 M2b Std.* library (Stdlib/*.csd declarations, Natives/Std implementations)
   Ghostrig.SystemLibs/    ⬜ M3  Gfx, Input, Fs, Net, Proc, Log, Sys, Media, Shop, Account, CForms controls
   Ghostrig.Narrative/     ⬜ M6  Storylet engine, blackboard, listeners, dialogue player, graph validator
   Ghostrig.Portal/        ⬜ M12 CScript Portal sandbox + IProjectRepository (local store)
@@ -93,9 +94,18 @@ tools/
   ✅ Met — `VmTests` (budgets, rollback, async timing, determinism), `HotSwapAndDisassemblyTests`, `ParserTests` (FsCheck fuzzing), and a test that parses every module sample in Documents 5 and 7.
 - Moved out of M2: the `Std.*` catalog (Doc 7 §13.2–13.14) → **M2b**; system libraries (§13.15–13.16) → **M3–M5**.
 
-### M2b. Standard library — ⏭ Next — *Doc 7 §13.2–13.14*
-- One native declaration file per namespace (`Std.Collections`, `Std.Seq`, `Std.Algo`, `Std.Text`, `Std.Math`, `Std.Stats`, `Std.Random`, `Std.Binary`, `Std.Compress`, `Std.Time`, `Std.Path`, `Std.Net`, `Std.Graph`, `Std.Data`, `Std.Game`, `Std.Test`) plus deterministic, step-charged host implementations.
+### M2b. Standard library — 🟡 In progress — *Doc 7 §13.2–13.14*
+- One native declaration file per namespace (`Stdlib/Std.*.csd`, the contract players read in the IDE API browser, with published step costs) plus deterministic, step-charged host implementations (`Natives/Std`).
+- ✅ Infrastructure: native classes in any module, `@Native("key")` for same-arity overloads, `NativeState` snapshots so faulted events roll back collections, caches and generators like fields and arrays; natives that rewrite script arrays journal them too; fail-fast iteration on concurrent modification; one `ValueComparer` (structural for values, `HashCode`/`Equatable`/`Comparable` for classes, identity otherwise) used by every collection.
+- ✅ `Std.Collections`: `List`, `Map` (insertion-ordered), `SortedMap`, `Set`, `SortedSet`, `Queue`, `Stack`, `Deque`, `PriorityQueue` (stable), `RingBuffer`, `BitSet`, `Grid2D`, `Matrix`, `Multimap`, read-only views; caches `LruCache`, `LfuCache`, `TtlCache` (simulated clock) with hit/miss/eviction counters; `ObjectPool`, `BloomFilter`, `CountMinSketch`, `HyperLogLog`, `Trie`, `IntervalTree`, `SkipList`, `ConsistentHashRing`.
+- ✅ `Std.Seq`: lazy, re-iterable `Sequence<T>` (fluent and functional forms), ordering with `ThenBy`, grouping, joins, windows, folds.
+- ✅ `Std.Algo`: stable sorts, searches, partition, top-k, lazy combinatorics, edit distances, hashing helpers (FNV-1a, Murmur3, SplitMix).
+- ✅ `Std.Random`: xoshiro256\*\* seeded via SplitMix64 (reference stream verified), unbiased bounded draws, sampling, weights, Gaussian, UUIDs, jump-based `Fork`.
+- ✅ Deterministic software maths core (`SoftMath`, Doc 7 D7): fdlibm exp/log/trig/atan with exact Payne–Hanek reduction for huge arguments (2/π computed with Machin's formula at start-up), checked against the platform by property tests.
+- ⬜ `Std.Math` and `Std.Stats` (on top of `SoftMath`), `Std.Text`, `Std.Binary`, `Std.Compress`, `Std.Time`, `Std.Path`, `Std.Net`, `Std.Graph`, `Std.Data`, `Std.Game`, `Std.Test`.
+- ⬜ Deferred into M2b from M2: async iterators; Stryker.NET mutation testing in CI.
 - **Exit:** every declared native is implemented (link-checked in CI) and each namespace has behavioural tests run through the VM.
+  🟡 Link check in place (`StdLibraryTests`: no missing and no orphan natives, library compiles without diagnostics); behavioural tests for the four finished namespaces.
 
 ### M3. Drivers & system libraries — ⬜ Not started — *Doc 3 §3.1, Doc 5 §2*
 - `IKernelDriver` + device-class interfaces; `Sys.Hardware` binding metered by the cost model.
@@ -190,6 +200,9 @@ Items consciously postponed while building; each has a target milestone so nothi
 | `Net`/`Fs` transfers billed through CScript drivers | M1 | M3 |
 | Stryker.NET mutation testing wired into CI | M1 | M2b |
 | Doc 7 examples that use system libraries (`Net`, `CForms`) are parsed in tests but not yet type-checked | M2 | M3–M5 |
+| `foreach` cannot deconstruct tuples (`foreach (var (k, v) in map)`); use `entry.Item1` / `entry.Item2` | M2b | Language polish, before M5 (IDE) |
+| Generic arguments are erased at run time, so `Map<string, int>` and `Map<int, int>` share a runtime class (consistent with the M2 type-test limitation) | M2b | Documented limitation |
+| Rollback snapshots a whole native collection the first time an event mutates it (O(n) host time, never charged as steps); per-operation undo would be cheaper for very large collections | M2b | Revisit with M3 profiling |
 
 ## Testing strategy (applies to every milestone)
 

@@ -17,10 +17,11 @@ public sealed class NativeRegistry
     {
         var registry = new NativeRegistry();
         CoreNatives.Register(registry);
+        Std.StdNatives.Register(registry);
         return registry;
     });
 
-    /// <summary>Core library natives only.</summary>
+    /// <summary>Core and standard-library (<c>Std.*</c>) natives; hosts add system libraries with <see cref="With"/>.</summary>
     public static NativeRegistry Default => LazyDefault.Value;
 
     public IEnumerable<string> Keys => _functions.Keys.Order(StringComparer.Ordinal);

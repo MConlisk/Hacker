@@ -1013,7 +1013,7 @@ internal sealed partial class BodyBinder
 
     private static bool ContainsTypeParameterOf(TypeSymbol type, MethodSymbol method) => type switch
     {
-        TypeParameterSymbol tp => ReferenceEquals(tp.Container, method),
+        TypeParameterSymbol tp => ReferenceEquals(tp.Container, method.OriginalDefinition),
         ArrayTypeSymbol a => ContainsTypeParameterOf(a.Element, method),
         NullableTypeSymbol n => ContainsTypeParameterOf(n.Underlying, method),
         NamedTypeSymbol n => n.IsConstructed && n.TypeArguments.Any(a => ContainsTypeParameterOf(a, method)),
@@ -1031,7 +1031,7 @@ internal sealed partial class BodyBinder
 
         switch (parameter)
         {
-            case TypeParameterSymbol tp when ReferenceEquals(tp.Container, method):
+            case TypeParameterSymbol tp when ReferenceEquals(tp.Container, method.OriginalDefinition):
                 if (!bindings.TryGetValue(tp, out var existing))
                 {
                     bindings[tp] = argument;

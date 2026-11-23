@@ -205,11 +205,16 @@ public sealed class NamedTypeSymbol : TypeSymbol
     public IEnumerable<Symbol> GetDeclaredMembers(string name) =>
         _byName.TryGetValue(name, out var list) ? list.Select(SubstituteMember) : [];
 
-    /// <summary>Members with the given name on this type, its base classes and interfaces (most-derived first).</summary>
+    /// <summary>
+    /// Members with the given name on this type, its base classes and interfaces (most-derived first). A method or
+    /// property hides inherited members with the same signature, so an implementation and the interface member it
+    /// satisfies are not both overload candidates.
+    /// </summary>
     public IEnumerable<Symbol> LookupMembers(string name)
     {
         var seen = new HashSet<NamedTypeSymbol>(ReferenceEqualityComparer.Instance);
         var queue = new Queue<NamedTypeSymbol>();
+        var found = new List<Symbol>();
         queue.Enqueue(this);
         while (queue.Count > 0)
         {
@@ -221,6 +226,19 @@ public sealed class NamedTypeSymbol : TypeSymbol
 
             foreach (var member in type.GetDeclaredMembers(name))
             {
+                var hidden = member switch
+                {
+                    MethodSymbol { MethodKind: MethodKind.Method } m => found.OfType<MethodSymbol>()
+                        .Any(f => f.MethodKind == MethodKind.Method && f.IsStatic == m.IsStatic && DeclarationBinder.SameSignature(f, m)),
+                    PropertySymbol p => found.OfType<PropertySymbol>().Any(f => f.IsIndexer == p.IsIndexer && f.Parameters.Length == p.Parameters.Length),
+                    _ => false,
+                };
+                if (hidden)
+                {
+                    continue;
+                }
+
+                found.Add(member);
                 yield return member;
             }
 

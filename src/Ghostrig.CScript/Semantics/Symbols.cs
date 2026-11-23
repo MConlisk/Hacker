@@ -240,12 +240,21 @@ public sealed class MethodSymbol : Symbol
 
     public ImmutableArray<TypeSymbol> TypeArguments { get; private set; } = [];
 
-    /// <summary>Stable key used to link native implementations: <c>Module.Type.Member/arity</c>.</summary>
+    /// <summary>
+    /// Stable key used to link native implementations: <c>Module.Type.Member/arity</c>, or the key given by a
+    /// <c>@Native("…")</c> attribute (needed when overloads share an arity but not a host implementation).
+    /// </summary>
     public string NativeKey
     {
         get
         {
             var original = OriginalDefinition;
+            if (original.Syntax is Ghostrig.CScript.Syntax.FunctionDecl or Ghostrig.CScript.Syntax.ConstructorDecl
+                && ((Ghostrig.CScript.Syntax.MemberDecl)original.Syntax).Attributes.FirstOrDefault(a => a.Name == "Native") is { Arguments: [Ghostrig.CScript.Syntax.LiteralExpr { Value: string key }] })
+            {
+                return key;
+            }
+
             var owner = original.Container switch
             {
                 NamedTypeSymbol t => $"{t.Module?.Name}.{t.Name}",

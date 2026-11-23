@@ -104,9 +104,13 @@ public sealed class Fiber
 /// <summary>Records overwritten values so a faulted event can be rolled back (Doc 7 §8.6).</summary>
 internal sealed class Journal
 {
+    private static long s_epochs;
     private readonly List<Action> _undo = [];
 
     public int Count => _undo.Count;
+
+    /// <summary>Identifies the current segment; native state snapshots at most once per epoch (see <see cref="Natives.NativeState"/>).</summary>
+    public long Epoch { get; private set; } = Interlocked.Increment(ref s_epochs);
 
     public void Record(Action undo) => _undo.Add(undo);
 
@@ -118,9 +122,14 @@ internal sealed class Journal
         }
 
         _undo.Clear();
+        Epoch = Interlocked.Increment(ref s_epochs);
     }
 
-    public void Commit() => _undo.Clear();
+    public void Commit()
+    {
+        _undo.Clear();
+        Epoch = Interlocked.Increment(ref s_epochs);
+    }
 }
 
 public enum FaultKind

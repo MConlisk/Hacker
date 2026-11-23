@@ -456,6 +456,31 @@ public sealed partial class VirtualMachine
         return native.Function(_context, args);
     }
 
+    /// <summary>Snapshots mutable native state once per journal segment so a faulted event restores it (Doc 7 §8.6).</summary>
+    internal void JournalNativeState(Natives.NativeState state)
+    {
+        if (_current?.Journal is not { } journal || state.SnapshotEpoch == journal.Epoch)
+        {
+            return;
+        }
+
+        var snapshot = state.CaptureSnapshot();
+        state.SnapshotEpoch = journal.Epoch;
+        journal.Record(() => state.RestoreSnapshot(snapshot));
+    }
+
+    /// <summary>Journals a whole script array before a native rewrites it in place (sort, shuffle, fill).</summary>
+    internal void JournalArray(Value[] items)
+    {
+        if (_current?.Journal is { } journal && items.Length > 0)
+        {
+            var copy = (Value[])items.Clone();
+            journal.Record(() => copy.CopyTo(items, 0));
+        }
+    }
+
+    internal Callable ResolveVirtual(int slot, Value receiver) => Resolve(slot, receiver);
+
     internal void ChargeNative(long steps)
     {
         Steps += steps;
