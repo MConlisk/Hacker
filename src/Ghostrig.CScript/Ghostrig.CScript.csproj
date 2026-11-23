@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Ghostrig.CScript</RootNamespace>
+    <Description>CScript language toolchain: lexer, parser, binder, bytecode compiler and step-metered VM (Document 7).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Ghostrig.CScript.Tests" />
+  </ItemGroup>
+
+</Project>

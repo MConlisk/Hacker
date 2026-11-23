@@ -634,7 +634,7 @@ module mini_lru;
 class MiniLru<K, V> where K : Hashable {
     private Map<K, V> items = new Map<K, V>();
     private int capacity;
-    LruCache(int capacity) { this.capacity = capacity; }
+    MiniLru(int capacity) { this.capacity = capacity; }
 
     V? Get(K key) {
         if (!items.ContainsKey(key)) return null;

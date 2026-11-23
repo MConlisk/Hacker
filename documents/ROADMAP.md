@@ -10,7 +10,7 @@
 |---|---|---|
 | M0 Repository & toolchain | ✅ Done | .NET 8 solution, strict build settings, xUnit + FsCheck, GitHub Actions CI. |
 | M1 Headless kernel core | ✅ Done | `src/Ghostrig.Kernel`, 80 passing tests. Carried forward: per-process step budgets and the scheduler move into M2 with the VM; the `Net`/`Fs` libraries billing transfers through drivers is M3; Stryker.NET mutation runs are not yet wired into CI. |
-| M2 CScript language | 🟡 In progress | Document 7 (language spec + standard library catalog) drafted for review; compiler/VM next. |
+| M2 CScript language | 🟡 In progress | Document 7 approved. Front end done: `src/Ghostrig.CScript` lexer, AST and parser (76 tests; every module sample in Docs 5 and 7 parses). Next: binder/type checker, bytecode compiler, step-metered VM with async/await. |
 
 ## Guiding principles for the build
 

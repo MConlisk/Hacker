@@ -11,6 +11,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{66FB95A4
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ghostrig.Kernel.Tests", "tests\Ghostrig.Kernel.Tests\Ghostrig.Kernel.Tests.csproj", "{FAF51B9D-9B68-43E5-ABAB-05B040C660C2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ghostrig.CScript", "src\Ghostrig.CScript\Ghostrig.CScript.csproj", "{2D828BFA-9374-4BC6-98D0-1A58CD781518}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ghostrig.CScript.Tests", "tests\Ghostrig.CScript.Tests\Ghostrig.CScript.Tests.csproj", "{6F63A014-7F9B-408B-AF6D-47BDB687CC70}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,9 +32,19 @@ Global
 		{FAF51B9D-9B68-43E5-ABAB-05B040C660C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FAF51B9D-9B68-43E5-ABAB-05B040C660C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FAF51B9D-9B68-43E5-ABAB-05B040C660C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D828BFA-9374-4BC6-98D0-1A58CD781518}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D828BFA-9374-4BC6-98D0-1A58CD781518}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D828BFA-9374-4BC6-98D0-1A58CD781518}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D828BFA-9374-4BC6-98D0-1A58CD781518}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F63A014-7F9B-408B-AF6D-47BDB687CC70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F63A014-7F9B-408B-AF6D-47BDB687CC70}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F63A014-7F9B-408B-AF6D-47BDB687CC70}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F63A014-7F9B-408B-AF6D-47BDB687CC70}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D6644416-BB81-4666-A511-A584399F488B} = {6D318C95-6ECD-47F2-AE78-FB0C8D3112AE}
 		{FAF51B9D-9B68-43E5-ABAB-05B040C660C2} = {66FB95A4-E746-4EE8-8262-7CB89467118C}
+		{2D828BFA-9374-4BC6-98D0-1A58CD781518} = {6D318C95-6ECD-47F2-AE78-FB0C8D3112AE}
+		{6F63A014-7F9B-408B-AF6D-47BDB687CC70} = {66FB95A4-E746-4EE8-8262-7CB89467118C}
 	EndGlobalSection
 EndGlobal
