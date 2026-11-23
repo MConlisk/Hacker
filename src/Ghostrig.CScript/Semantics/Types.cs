@@ -369,6 +369,11 @@ public sealed class NamedTypeSymbol : TypeSymbol
 
 public sealed class ArrayTypeSymbol(TypeSymbol element) : TypeSymbol(element.Name + "[]")
 {
+    /// <summary>The Core <c>Array&lt;T&gt;</c> declaration supplying array members and interfaces.</summary>
+    public static NamedTypeSymbol? MemberSource { get; internal set; }
+
+    public NamedTypeSymbol? Members => MemberSource?.Construct([Element]);
+
     public TypeSymbol Element { get; } = element;
     public override TypeKind TypeKind => TypeKind.Array;
     public override bool IsReferenceType => true;

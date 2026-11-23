@@ -80,6 +80,7 @@ import vault.ironclad;     // CS-Vault package (§12)
 - `bytes`: immutable byte sequence; `ByteBuffer` (§13) is its mutable builder.
 - `T[]`: fixed-length mutable array with `.Length` and `.Slice(start, count)`, created with `new T[n]` or `[a, b, c]`.
 - `fn(A, B) -> R`: function type; `fn(A) -> void` for actions.
+- Parentheses group a type: `(fn(string) -> void)?` is a nullable function type, whereas `fn() -> int?` returns `int?`.
 - `Task` / `Task<T>`: a pending simulated-time operation (§5.6).
 - Tuples: `(int, string)`, destructured with `var (code, msg) = Probe();`.
 

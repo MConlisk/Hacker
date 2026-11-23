@@ -564,12 +564,16 @@ public sealed class Parser
             Next();
             var elements = ParseSeparated(TokenKind.CloseParen, ParseType);
             Expect(TokenKind.CloseParen, "')'");
-            if (elements.Length < 2)
+            if (elements.Length == 0)
             {
-                _diagnostics.Report(DiagnosticCodes.ExpectedType, _source, From(start), "tuple with fewer than two elements");
+                _diagnostics.Report(DiagnosticCodes.ExpectedType, _source, From(start), "()");
+                type = new TupleType(From(start), elements);
             }
-
-            type = new TupleType(From(start), elements);
+            else
+            {
+                // A single parenthesized type is grouping: (fn() -> int)? is a nullable function type.
+                type = elements.Length == 1 ? elements[0] : new TupleType(From(start), elements);
+            }
         }
         else if (At(TokenKind.Identifier))
         {

@@ -134,6 +134,11 @@ public static class Conversions
             return new(ConversionKind.Boxing);
         }
 
+        if (from is ArrayTypeSymbol { Members: { } arrayMembers } && to is NamedTypeSymbol arrayInterface && arrayMembers.IsSubtypeOf(arrayInterface))
+        {
+            return new(ConversionKind.ImplicitReference);
+        }
+
         if (from is TupleTypeSymbol ft && to is TupleTypeSymbol tt && ft.Elements.Length == tt.Elements.Length
             && ft.Elements.Zip(tt.Elements).All(p => ClassifyImplicit(p.First, p.Second).Exists))
         {
