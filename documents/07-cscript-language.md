@@ -2,19 +2,19 @@
 
 *Document 7 of 7 — Language, Runtime Contract & Standard Library*
 
-> **Status: draft for review.** This document defines the language players read and write for every application, website, library and driver in GHOSTRIG. It binds Documents 2, 3 and 5. The open decisions are collected in §0.
+> **Status: approved design decisions (D1–D7); implementation in progress (M2).** This document defines the language players read and write for every application, website, library and driver in GHOSTRIG. It binds Documents 2, 3 and 5.
 
 ---
 
-## 0. Decisions for review
+## 0. Design decisions
 
-| # | Decision taken in this draft | Alternative |
+| # | Decision | Alternative considered |
 |---|---|---|
 | D1 | **C#-family syntax**, statically typed, with `var` inference — matches every code sample in Docs 5–6. | A Python/Lua-style dynamic language. |
 | D2 | **Top-level declarations are public by default**; `private` hides them. This keeps the Doc 5 driver sample valid as written. | Private by default with an explicit `public`. |
-| D3 | **Blocking syscalls are suspension points.** There is no `async`/`await`; a call that consumes simulated time parks the process until the clock reaches its completion. | Explicit `async`/`await`. |
-| D4 | **Puzzle-relevant data structures are not built in.** LRU caches, Bloom filters, tries and other gameplay-relevant structures ship as CS-Vault packages written in CScript (`lru_cache.csc`, `graph_bloom.csc`), so the story's "link it from CS-Vault" beats stay meaningful. General-purpose collections are built in. | Ship everything in the standard library. |
-| D5 | **The standard library is native** (C#, fast, step-metered by published cost tables). Players read its contracts in the IDE's API browser rather than its source. | Ship the standard library as inspectable CScript source (slower; much larger content effort). |
+| D3 | **Explicit `async` / `await`.** Operations that consume simulated time (network, disk, crypto, media, timers) return `Task` / `Task<T>`; `await` suspends the current function until the simulated clock reaches completion, and the UI stays responsive meanwhile (§8.3). | Implicitly blocking syscalls. |
+| D4 | **Batteries included.** Every general-purpose data structure — including LRU/LFU caches, Bloom filters, tries, interval trees and skip lists — is in the standard library. The challenge of the driver puzzles is knowing *that* and *where* a cache or batch belongs, not re-implementing one. CS-Vault hosts exploit suites, community drivers and patches. | Withhold puzzle-relevant structures and ship them only via CS-Vault. |
+| D5 | **The standard library is native** (C#, fast, step-metered by published cost tables). Players read its contracts — signatures, documentation and step costs — in the IDE's API browser, not its source. | Inspectable CScript source. |
 | D6 | **`int` is 64-bit two's complement with wrapping arithmetic**, as packet and hash code expect; `Math.Checked*` helpers detect overflow. | Overflow throws. |
 | D7 | **`float` is IEEE-754 binary64** under strict determinism rules (§9); transcendental functions are implemented in software inside the VM. | Fixed-point only. |
 
@@ -34,26 +34,26 @@ Every CScript source file holds exactly one module. Its kind is fixed by its ext
 
 | Extension | Kind | Entry point | Typical location |
 |---|---|---|---|
-| `.csc` with `@App` | Application | `void Main(Args args)` | `/apps/`, `/home/kael/bin/` |
+| `.csc` with `@App` | Application | `void Main(Args args)` or `async Task Main(Args args)` | `/apps/`, `/home/kael/bin/` |
 | `.csc` without `@App` | Library | none (imported) | `/sys/lib/`, `/lib/vault/`, `/lib/user/` |
 | `.drv` | Device driver | `IKernelDriver` contract (§11) | `/sys/drivers/<class>/` |
-| `.cform` | CForms page (website or app view) | `Form Build()` or `Form Build(PageContext ctx)` | `/srv/www/public/`, `/apps/<app>/views/` |
+| `.cform` | CForms page (website or app view) | `Form Build(PageContext ctx)` (may be `async Task<Form>`) | `/srv/www/public/`, `/apps/<app>/views/` |
 | `.csc` with `@Test` | Test suite | test functions (§14.4) | anywhere |
 
 ```c
 // Header of every module
-@Attribute(args)*          // optional attributes (see §5.6)
+@Attribute(args)*          // optional attributes (see §5.7)
 module Name;               // must match the file name without extension
 import Std.Text;           // zero or more imports
 import Net as N;           // alias
-import vault.lru_cache;    // CS-Vault package (§12)
+import vault.ironclad;     // CS-Vault package (§12)
 ```
 
 ## 3. Lexical structure
 
 - **Encoding:** UTF-8. Identifiers are ASCII letters, digits and `_`, and do not start with a digit.
 - **Comments:** `// line`, `/* block */`, and `/// doc comment` (shown in the IDE's hover help).
-- **Keywords:** `module import as private const var if else while do for foreach in break continue return switch case default try catch finally throw new null true false this base class struct interface enum where is fn yield typeof params`. `get`, `set` and `void` are contextual.
+- **Keywords:** `module import as private const var if else while do for foreach in break continue return switch case default try catch finally throw new null true false this base class struct interface enum where is fn yield typeof params async await`. `get`, `set` and `void` are contextual.
 - **Literals:**
   - integers: `42`, `0x2A`, `0b101010`, `1_000_000`
   - floats: `3.14`, `1e-9`
@@ -80,6 +80,7 @@ import vault.lru_cache;    // CS-Vault package (§12)
 - `bytes`: immutable byte sequence; `ByteBuffer` (§13) is its mutable builder.
 - `T[]`: fixed-length mutable array with `.Length` and `.Slice(start, count)`, created with `new T[n]` or `[a, b, c]`.
 - `fn(A, B) -> R`: function type; `fn(A) -> void` for actions.
+- `Task` / `Task<T>`: a pending simulated-time operation (§5.6).
 - Tuples: `(int, string)`, destructured with `var (code, msg) = Probe();`.
 
 ### 4.3 User-defined types
@@ -129,7 +130,25 @@ Classes may declare `int Count { get => n; }` and `V this[K key] { get ...; set 
 
 A function that returns `Iterable<T>` may use `yield return x;` and `yield break;`. Iteration is lazy and each resumption is metered.
 
-### 5.6 Attributes
+### 5.6 Asynchronous functions
+
+```c
+async Task<PortState[]> ScanAsync(IpAddress ip, int[] ports) {
+    var results = new List<PortState>();
+    foreach (var port in ports) {
+        results.Add(await Net.ProbeAsync(ip, port));   // suspends until the probe completes in simulated time
+    }
+    return results.ToArray();
+}
+```
+
+- `async` functions return `Task` or `Task<T>`; `await` is only legal inside them. Event handlers, lambdas, `Main` and `Build` may be `async`.
+- Every library operation that consumes simulated time is asynchronous and named `…Async` (`Net.ResolveAsync`, `Fs.ReadAsync`, `Crypto.HashAsync`, `Task.Delay(Duration)`). Cheap, instantaneous queries stay synchronous (`Fs.Exists`, `Sys.Now`).
+- Calling an async function without `await` starts it and yields the `Task` (fire-and-forget is a compiler warning unless the task is stored or passed to `Proc.Track`). Combinators: `Task.WhenAll`, `Task.WhenAny`, `Task.Timeout`, and `CancellationToken` support on every `…Async` API.
+- `async` iterators: `async Iterable<T>` with `await foreach` (e.g. streaming a large file in blocks).
+- **Drivers are synchronous.** Driver entry points cannot be `async` and cannot `await`; their `Hardware` calls are billed to the syscall that invoked them (§11).
+
+### 5.7 Attributes
 
 | Attribute | Applies to | Meaning |
 |---|---|---|
@@ -206,6 +225,8 @@ Every running application, page and background worker is a process with:
 - a capability set (§10),
 - a mailbox of events.
 
+Each process runs a single-threaded event loop. Awaited tasks resume on that loop; there is no parallel execution inside a process.
+
 Drivers are not processes: they are kernel-resident modules invoked synchronously by system libraries.
 
 ### 8.2 Entry points
@@ -218,7 +239,7 @@ Drivers are not processes: they are kernel-resident modules invoked synchronousl
 
 Each host frame grants the kernel one frame of simulated time (16.67 ms at 1× speed). The scheduler runs runnable processes round-robin by process id, in fixed quanta of steps, until their billed cycles fill the slice.
 
-A process that calls a time-consuming syscall (network, disk, crypto, drawing) is **parked** until the simulation clock reaches the operation's completion instant (D3). Input events are stamped with the frame's simulated time. A slow rig therefore completes fewer steps per simulated second, and that is what makes it feel slow, while the host frame rate is unaffected (Doc 2 §2).
+When a function `await`s a time-consuming operation (network, disk, crypto, media), its continuation is queued to resume when the simulation clock reaches the operation's completion instant (D3); meanwhile the process keeps handling other events. Continuations that become ready at the same instant run in the order their operations were issued. Input events are stamped with the frame's simulated time. A slow rig therefore completes fewer steps per simulated second, and that is what makes it feel slow, while the host frame rate is unaffected (Doc 2 §2).
 
 ### 8.4 Metering
 
@@ -235,7 +256,7 @@ A process that calls a time-consuming syscall (network, disk, crypto, drawing) i
 | Driver entry point | 500,000 | 2,000,000 |
 | Background worker | unlimited (time-sliced) | — |
 
-Long work belongs in a worker (`Proc.Spawn`).
+Long computation belongs in a worker (`Proc.Spawn`); long waiting belongs behind `await`.
 
 ### 8.6 Faults and rollback
 
@@ -301,7 +322,7 @@ Inside a driver, `Hardware` (from `import Sys.Hardware;`) is the device the driv
 | Crypto (CPU) | `ExpandKey(key) -> KeySchedule`, `EncryptBlock(block, schedule)`, `DecryptBlock(…)` |
 | Bus | `Acknowledge(irq)`, `AcknowledgeBatch(irqs)`, `CoalesceCap` |
 
-Cache accounting is done by the simulated device, never self-reported by the driver. A storage controller keeps a sector cache that `FlushCache()` empties. The crypto unit records whether a key schedule was reused or re-expanded (e.g. after `keyCache.Clear()`). Drivers cannot block, spawn processes, open files, or use timers: delays can only come from how commands are structured (Doc 2 §2).
+Driver entry points are synchronous (§5.6). Cache accounting is done by the simulated device, never self-reported by the driver. A storage controller keeps a sector cache that `FlushCache()` empties. The crypto unit records whether a key schedule was reused or re-expanded (e.g. after `keyCache.Clear()`). Drivers cannot block, spawn processes, open files, or use timers: delays can only come from how commands are structured (Doc 2 §2).
 
 > **Binding note:** CScript spells the enum members `TransferMode.CPU` / `TransferMode.DMA`, as in Docs 5–6. The C# kernel spells them `Cpu` / `Dma`; the binding maps them.
 
@@ -315,7 +336,7 @@ Cache accounting is done by the simulated device, never self-reported by the dri
   5. native namespaces (`Std.*`, system libraries)
 
   An ambiguous name is a compile error.
-- **CS-Vault packages:** a package is a directory containing a plain-text `package.cfg` (`name`, `version`, `depends`, `capabilities`) and one or more `.csc` modules. `Vault.Install("lru_cache")` downloads it into `/lib/vault/lru_cache/` (a billed network transfer); after that, `import vault.lru_cache;` works.
+- **CS-Vault packages:** a package is a directory containing a plain-text `package.cfg` (`name`, `version`, `depends`, `capabilities`) and one or more `.csc` modules. `await Vault.InstallAsync("ironclad")` downloads it into `/lib/vault/ironclad/` (a billed network transfer); after that, `import vault.ironclad;` works. CS-Vault hosts exploit suites (IronClad), community drivers and patches, tools such as `deadman_broadcast`, and players' own published libraries.
 - **Versions:** versions are semantic (`1.2.0`). Each package records the exact dependency versions it resolved, so builds are repeatable.
 - **Kael's personal repository** (the Portal cloud repository, Doc 1 §5) is just another CS-Vault source: `Vault.Pull("kael/netcard-batched")`.
 
@@ -336,7 +357,7 @@ The standard library is broad on purpose: players should be able to write real t
 
 `List<T>`, `Map<K,V>` (insertion-ordered), `SortedMap<K,V>`, `Set<T>`, `SortedSet<T>`, `Queue<T>`, `Stack<T>`, `Deque<T>`, `PriorityQueue<T,P>`, `RingBuffer<T>`, `BitSet`, `Matrix<T>`, `Grid2D<T>`, `Multimap<K,V>`, `ReadOnly` views.
 
-**Not built in, by design (D4):** LRU/LFU caches, Bloom filters, tries, interval trees and skip lists. These are CS-Vault packages.
+**Caches and probabilistic structures (D4):** `LruCache<K,V>`, `LfuCache<K,V>`, `TtlCache<K,V>`, `BloomFilter<T>`, `CountMinSketch<T>`, `HyperLogLog<T>`, `Trie`, `IntervalTree<T>`, `SkipList<T>`, `ObjectPool<T>`, `ConsistentHashRing<T>`. Each reports hit/miss counters that `Debug.Inspect` and the Profiler display.
 
 ### 13.3 Algorithms and functional sequences — `Std.Seq`, `Std.Algo`
 
@@ -414,7 +435,7 @@ The standard library is broad on purpose: players should be able to write real t
 - `Centrality` (degree, betweenness)
 - `ToDot` (export for the visualizer)
 
-Visited-set compression (Bloom filters) stays a CS-Vault package (`graph_bloom.csc`).
+Large traversals can track visited nodes in a `BloomFilter<T>` to keep memory low (Act II Crawler).
 
 ### 13.11 Data tables — `Std.Data`
 
@@ -422,7 +443,7 @@ Visited-set compression (Bloom filters) stays a CS-Vault package (`graph_bloom.c
 
 ### 13.12 Concurrency and messaging — inside `Proc`
 
-`Channel<T>` (bounded and unbounded), `Select` over channels, `Mutex`, `Semaphore`, `Barrier`, `Future<T>`. All are deterministic, because scheduling is (§8.3).
+`Task`/`Task<T>` combinators, `CancellationToken`, `Channel<T>` (bounded and unbounded, with `await ReadAsync`/`WriteAsync`), `Select` over channels, `AsyncMutex`, `Semaphore`, `Barrier`. All are deterministic, because scheduling is (§8.3).
 
 ### 13.13 Games and graphics helpers — `Std.Game`
 
@@ -441,6 +462,8 @@ Visited-set compression (Bloom filters) stays a CS-Vault package (`graph_bloom.c
 - **`Debug`:** `Assert`, `Trace`, `Inspect(obj)` (pretty-printed object graphs), `Breakpoint()`, `StepCount()`, `Profile(fn)`. Results are reported in steps and simulated cycles.
 
 ### 13.15 System libraries (capability-gated; C# kernel bindings)
+
+Every operation below that consumes simulated time is exposed as an `…Async` method returning `Task`/`Task<T>` (§5.6) — e.g. `Fs.ReadAsync`, `Net.ConnectAsync`, `Session.WriteAsync`, `Crypto.Sha256Async`, `Media.Video.OpenAsync`, `Vault.InstallAsync`. Names in the table are abbreviated without the suffix.
 
 | Library | Main surface |
 |---|---|
@@ -582,7 +605,6 @@ module PortSnifferLite;
 
 import CForms;
 import Net;
-import Proc;
 import Std.Net;
 
 void Main(Args args) {
@@ -590,25 +612,26 @@ void Main(Args args) {
     var target = new TextBox("verbena-and-rust.ny56");
     var results = new ListView(["Port", "State", "Banner"]);
     var scan = new Button("Scan");
-    scan.Click += (s, e) => Proc.Spawn(() => {
-        IpAddress ip = Net.Resolve(target.Text);
+    scan.Click += async (s, e) => {
+        IpAddress ip = await Net.ResolveAsync(target.Text);
         foreach (var port in [21, 22, 80, 2121, 8443]) {
-            var state = Net.Probe(ip, port);
+            var state = await Net.ProbeAsync(ip, port);
             results.Add([$"{port}", $"{state.Status}", state.Banner ?? ""]);
         }
-    });
+    };
     form.Add(target, scan, results);
     form.Show();
 }
 ```
 
-### 16.3 A generic library (CS-Vault style)
+### 16.3 A generic library (publishable to CS-Vault)
 
 ```c
-/// Least-recently-used cache. Published to CS-Vault as lru_cache 1.0.0.
-module lru_cache;
+/// A minimal least-recently-used cache, written by hand to show generics.
+/// (Std.Collections.LruCache is the production version.) Publishable to CS-Vault as kael/mini_lru 1.0.0.
+module mini_lru;
 
-class LruCache<K, V> where K : Hashable {
+class MiniLru<K, V> where K : Hashable {
     private Map<K, V> items = new Map<K, V>();
     private int capacity;
     LruCache(int capacity) { this.capacity = capacity; }
@@ -637,9 +660,9 @@ module StorefrontIndex;
 import CForms;
 import Std.Text;
 
-Form Build(PageContext ctx) {
+async Task<Form> Build(PageContext ctx) {
     var page = new Form("Verbena & Rust");
-    var rows = Csv.Parse(ctx.Http.Get("/catalog_orchids.csv").Text);
+    var rows = Csv.Parse((await ctx.Http.GetAsync("/catalog_orchids.csv")).Text);
     var grid = new DataGrid(rows);
     page.Add(new Label("Bioluminescent orchids, grown above the waterline."), grid);
     return page;
@@ -655,7 +678,7 @@ Form Build(PageContext ctx) {
 | Doc 2 §1: drivers in `/sys/drivers/**/*.drv`, apps `.csc`, pages `.cform` | §2 |
 | Doc 2 §2: no fake timers in drivers | §10 (no `Proc` in drivers), §11 |
 | Doc 3 §2.1: AST, static type and capability checks, structured diagnostics | §4, §10, §14.1 |
-| Doc 3 §2.2: step budgets, suspension, rollback | §8.4–§8.6 |
+| Doc 3 §2.2: step budgets, suspension, rollback | §5.6, §8.3–§8.6 |
 | Doc 3 §3.1: `IKernelDriver` + device-class interfaces | §11 |
 | Doc 5 §2.1: driver sample | §16.1 (the original sample also compiles unchanged) |
 | Doc 1 §5: Portal and personal repository | §10, §12 |

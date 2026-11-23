@@ -156,7 +156,7 @@ Every ending's "Leverage Call" coerces **Director Marcus Hale**, head of Aegis's
 
 CS-Vault is hosted on a simulated package server (`cs-vault.ny56`) accessible via Browser or CScript IDE. It contains:
 
-- Reusable CScript modules (`lru_cache.csc`, `graph_bloom.csc`, `ironclad_injector.csc`, `deadman_broadcast.csc`).
+- Exploit and tool packages (`ironclad_injector.csc`, `deadman_broadcast.csc`) and community libraries. General-purpose structures such as LRU caches and Bloom filters are in the CScript standard library (Document 7 §13.2), not CS-Vault.
 - Faction repositories gated by tokens (e.g., the Iron Syndicate's IronClad suite).
 - Mode-specific driver diff patches in Silicon & Bus and Street Ghost modes.
 - **Kael's personal repository**, which mirrors the CScript Portal's cloud repository so Portal projects can be pulled into the live game (in campaign time, billed against the rig).

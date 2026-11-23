@@ -73,7 +73,7 @@ Your drive is reading the dictionary accurately, so the cracker is slowly tickin
 - The driver is initialized with `disk.Mode = TransferMode.CPU` instead of `TransferMode.DMA`, forcing your processor to manually shepherd every single byte off the disk instead of letting the controller write directly to RAM.
 - Inside `ReadBlock(int address, int size)`, the driver executes a `for` loop that calls `Hardware.Read(address + i, 1)` one byte at a time — and flushes the sector cache on every read — instead of pulling the entire contiguous block in a single `Hardware.Read(address, size)` call.
 
-You switch the controller to `TransferMode.DMA`, replace the byte-by-byte loop with a single block-read command, and link a proper LRU caching struct (`lru_cache.csc`) from CS-Vault.
+You switch the controller to `TransferMode.DMA`, replace the byte-by-byte loop with a single block-read command, and wrap the reads in the standard library's `LruCache`.
 
 When you hot-swap the driver, the violent clicking of your hard drive instantly stops, replaced by a single, smooth whir as the dictionary streams into memory in large DMA blocks through the new cache. Your CPU load drops from 98% to 12%, and the Password Cracker tears through the remaining combinations in seconds.
 
@@ -127,7 +127,7 @@ Immediately, your speakers pick up a thin, pulsing coil whine — a low-level ha
 
 > `WARNING: OptiLink_NIC submitting unbatched DMA descriptors. Command Efficiency: 48% | Interrupt Efficiency: 54%`
 
-Classic factory bloat. The hardware is fast, but the stock `OptiLinkDriver.drv` queues single-descriptor transfers instead of coalescing descriptors into ring-buffer batches. You open the CScript IDE, pull up `OptiLinkDriver.drv`, and refactor the transmit ring to batch descriptors before ringing the hardware doorbell. You also pull a lightweight GraphBloom helper (`graph_bloom.csc`) from CS-Vault to keep memory allocations low during topology sweeps.
+Classic factory bloat. The hardware is fast, but the stock `OptiLinkDriver.drv` queues single-descriptor transfers instead of coalescing descriptors into ring-buffer batches. You open the CScript IDE, pull up `OptiLinkDriver.drv`, and refactor the transmit ring to batch descriptors before ringing the hardware doorbell. You also switch the Crawler's visited-node set to the standard library's `BloomFilter` to keep memory allocations low during topology sweeps.
 
 You compile and hot-swap the driver. The whine stops.
 

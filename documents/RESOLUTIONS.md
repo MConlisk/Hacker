@@ -37,3 +37,12 @@
 - **Supplier manifests:** the `/supplier_manifests/` folder mentioned in the story was added to the Verbena & Rust file layout.
 - **Director's blackmail ledger:** the leverage files used in every Hale "Leverage Call" are now listed in the content spec.
 - **Comply/defy as actions:** observable action signatures were defined for complying with or defying Vance, plus the case where the trace completes first.
+
+## CScript language decisions (Document 7)
+
+| # | Decision | Consequence |
+|---|---|---|
+| 14 | Data structures are built in: LRU/LFU caches, Bloom filters, tries, etc. ship in the standard library. | Story Act I Scene 4 and Act II Scene 2 now use `Std.Collections.LruCache` / `BloomFilter` instead of CS-Vault downloads; Doc 5 §5.3 lists CS-Vault as exploit suites, tools and community code. |
+| 15 | The standard library is native C# and step-metered; players see contracts, not source. | Doc 7 D5. |
+| 16 | Top-level declarations are public by default. | Doc 5 driver sample compiles as written. |
+| 17 | Explicit `async` / `await` for simulated-time operations; driver entry points stay synchronous. | Doc 7 D3, §5.6, §8.3. |
