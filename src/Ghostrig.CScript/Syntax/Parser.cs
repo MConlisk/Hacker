@@ -287,7 +287,7 @@ public sealed class Parser
     private Modifiers ParseModifiers()
     {
         var seen = new HashSet<TokenKind>();
-        while (Current.Kind is TokenKind.PrivateKeyword or TokenKind.AsyncKeyword or TokenKind.ConstKeyword)
+        while (Current.Kind is TokenKind.PrivateKeyword or TokenKind.AsyncKeyword or TokenKind.ConstKeyword or TokenKind.StaticKeyword)
         {
             if (!seen.Add(Current.Kind))
             {
@@ -298,7 +298,8 @@ public sealed class Parser
         }
 
         return new Modifiers(
-            seen.Contains(TokenKind.PrivateKeyword), seen.Contains(TokenKind.AsyncKeyword), seen.Contains(TokenKind.ConstKeyword));
+            seen.Contains(TokenKind.PrivateKeyword), seen.Contains(TokenKind.AsyncKeyword), seen.Contains(TokenKind.ConstKeyword),
+            seen.Contains(TokenKind.StaticKeyword));
     }
 
     private FieldDecl ParseFieldRest(int start, ImmutableArray<AttributeSyntax> attributes, Modifiers modifiers, string? doc,
@@ -361,7 +362,8 @@ public sealed class Parser
             initializer = new ConstructorInitializer(From(initStart), isBase, args);
         }
 
-        var body = ParseBlock();
+        // Native declaration files (Doc 7 §13) declare constructors without bodies: 'List();'
+        BlockStmt? body = Match(TokenKind.Semicolon) ? null : ParseBlock();
         return new ConstructorDecl(From(start), attributes, modifiers, doc, name, parameters, initializer, body);
     }
 

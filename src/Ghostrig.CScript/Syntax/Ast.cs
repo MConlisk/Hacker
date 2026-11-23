@@ -26,7 +26,7 @@ public sealed record AttributeSyntax(TextSpan Span, string Name, ImmutableArray<
 public sealed record ImportDecl(TextSpan Span, QualifiedName Name, string? Alias) : Node(Span);
 
 /// <summary>Declaration modifiers. Top-level and member declarations are public unless <see cref="IsPrivate"/> (Doc 7 D2).</summary>
-public sealed record Modifiers(bool IsPrivate, bool IsAsync, bool IsConst)
+public sealed record Modifiers(bool IsPrivate, bool IsAsync, bool IsConst, bool IsStatic = false)
 {
     public static readonly Modifiers None = new(false, false, false);
 }
@@ -48,7 +48,7 @@ public sealed record FunctionDecl(
 
 public sealed record ConstructorDecl(
     TextSpan Span, ImmutableArray<AttributeSyntax> Attributes, Modifiers Modifiers, string? DocComment,
-    string Name, ImmutableArray<Parameter> Parameters, ConstructorInitializer? Initializer, BlockStmt Body)
+    string Name, ImmutableArray<Parameter> Parameters, ConstructorInitializer? Initializer, BlockStmt? Body)
     : MemberDecl(Span, Attributes, Modifiers, Name, DocComment);
 
 public sealed record ConstructorInitializer(TextSpan Span, bool IsBase, ImmutableArray<Argument> Arguments) : Node(Span);
