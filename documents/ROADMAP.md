@@ -13,7 +13,7 @@
 | M0 Repository & toolchain | ✅ Done | `Ghostrig.sln`, `Directory.Build.props`, `.github/workflows/ci.yml` | CI green on every push and pull request |
 | M1 Headless kernel core | ✅ Done | `src/Ghostrig.Kernel`, `content/` | 80 tests (`tests/Ghostrig.Kernel.Tests`) |
 | M2 CScript language, compiler & VM | ✅ Done | `src/Ghostrig.CScript` | 201 tests (`tests/Ghostrig.CScript.Tests`) |
-| M2b Standard library (`Std.*`) | 🟡 In progress | `src/Ghostrig.CScript/Stdlib/Std.*.csd`, `Natives/Std` | 53 tests (`tests/Ghostrig.CScript.Tests/Std`); Collections, Seq, Algo, Random, Math, Stats done |
+| M2b Standard library (`Std.*`) | 🟡 In progress | `src/Ghostrig.CScript/Stdlib/Std.*.csd`, `Natives/Std` | 71 tests (`tests/Ghostrig.CScript.Tests/Std`); Collections, Seq, Algo, Random, Math, Stats, Text, Binary, Compress done |
 | M3 Drivers & system libraries | ⬜ Not started | — | — |
 | M4 MonoGame host shell | ⬜ Not started | — | — |
 | M5 Core applications | ⬜ Not started | — | — |
@@ -104,10 +104,13 @@ tools/
 - ✅ Deterministic software maths core (`SoftMath`, Doc 7 D7): fdlibm exp/log/trig/atan with exact Payne–Hanek reduction for huge arguments (2/π computed with Machin's formula at start-up), checked against the platform by property tests.
 - ✅ `Std.Math`: int/float functions on `SoftMath`, number theory (deterministic Miller–Rabin, Pollard–Brent factorisation, modular arithmetic, `Checked*`), `BigInt`, `Rational`, `Complex`, `Fixed` (Q32.32), `Vector2`/`Vector3`, `Matrix3x2`/`Matrix4x4`, `Rect`, `Circle`, `Polygon`, segment/hull helpers. Native value types compare by value (`==`, `Equals`, collection keys) through `IStructuralState`.
 - ✅ `Std.Stats`: mean/median/mode/variance/percentiles (compensated summation), `Describe`, histograms, correlation, least-squares regression, moving averages, z-score and IQR outliers, streaming `RunningStats`.
-- ⬜ `Std.Text`, `Std.Binary`, `Std.Compress`, `Std.Time`, `Std.Path`, `Std.Net`, `Std.Graph`, `Std.Data`, `Std.Game`, `Std.Test`.
+- ✅ `Std.Text`: `StringBuilder`, `Format` (bytes, durations, tables…), linear-time `Regex` (no catastrophic backtracking; captures and named groups), `Encoding` (UTF-8/ASCII/Latin-1, hex, Base64/Base64Url/Base32, URL, HTML, ROT13/Caesar, XOR), RFC 4180 `Csv` with typed columns, immutable `JsonValue` (strict parser with positions, path queries, `Serialize` of collections and `Serializable` objects), `Cfg`, `Markdown` text helpers, `Template`, Myers `Diff` with unified patch create/apply, `Tokenizer` + `TokenStream`, `Search` (glob, wildcard, fuzzy ranking, grep).
+- ✅ `Std.Binary`: `ByteBuffer`, endian-aware `BinaryReader`/`BinaryWriter` (varints, length-prefixed strings; truncation raises `ProtocolError`), `Bits`, Python-style `Struct.Pack`/`Unpack`, `Checksum` (CRC-32/16, Adler-32, Fletcher-16, Internet), `HexDump`.
+- ✅ `Std.Compress`: deterministic encoders written in-house — `Rle`, `Lz77`, `Deflate` (standard raw DEFLATE, verified against the platform inflater), canonical `Huffman`; decoders are bounded at 64 MB.
+- ⬜ `Std.Time`, `Std.Path`, `Std.Net`, `Std.Graph`, `Std.Data`, `Std.Game`, `Std.Test`.
 - ⬜ Deferred into M2b from M2: async iterators; Stryker.NET mutation testing in CI.
 - **Exit:** every declared native is implemented (link-checked in CI) and each namespace has behavioural tests run through the VM.
-  🟡 Link check in place (`StdLibraryTests`: no missing and no orphan natives, library compiles without diagnostics); behavioural tests for the six finished namespaces.
+  🟡 Link check in place (`StdLibraryTests`: no missing and no orphan natives, library compiles without diagnostics); behavioural tests for the nine finished namespaces.
 
 ### M3. Drivers & system libraries — ⬜ Not started — *Doc 3 §3.1, Doc 5 §2*
 - `IKernelDriver` + device-class interfaces; `Sys.Hardware` binding metered by the cost model.
@@ -205,6 +208,10 @@ Items consciously postponed while building; each has a target milestone so nothi
 | `foreach` cannot deconstruct tuples (`foreach (var (k, v) in map)`); use `entry.Item1` / `entry.Item2` | M2b | Language polish, before M5 (IDE) |
 | Generic arguments are erased at run time, so `Map<string, int>` and `Map<int, int>` share a runtime class (consistent with the M2 type-test limitation) | M2b | Documented limitation |
 | `==` on *user* classes implementing `Equatable<T>` still compares references (Doc 7 §6 says it should call `Equals`); collections and native value types already honour equality | M2b | Language polish, before M5 |
+| `Markdown` renders to plain text only; rendering to CForms rich text needs the CForms controls | M2b | M4 |
+| `JsonValue` cannot deserialize into a typed object (`Deserialize<T>`): generic arguments are erased at run time | M2b | Revisit with runtime generics, or a schema-driven `Json.Bind(obj)` in M5 |
+| `Std.Text` ships a `Tokenizer` + `TokenStream` for recursive-descent parsers instead of parser combinators (Doc 7 §13.4 names both) | M2b | Combinators if a puzzle needs them (M8–M9) |
+| Regex numbering follows .NET (unnamed groups first, then named); backreferences and lookaround are rejected by design (linear-time matching) | M2b | Documented in the API |
 | Rollback snapshots a whole native collection the first time an event mutates it (O(n) host time, never charged as steps); per-operation undo would be cheaper for very large collections | M2b | Revisit with M3 profiling |
 
 ## Testing strategy (applies to every milestone)

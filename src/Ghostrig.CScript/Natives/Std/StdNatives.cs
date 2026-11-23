@@ -13,5 +13,9 @@ public static class StdNatives
         MathNatives.Register(registry);
         GeometryNatives.Register(registry);
         StatsNatives.Register(registry);
+        TextNatives.Register(registry);
+        JsonNatives.Register(registry);
+        BinaryNatives.Register(registry);
+        CompressNatives.Register(registry);
     }
 }
