@@ -82,6 +82,18 @@ public sealed partial class VirtualMachine
 
     public IReadOnlyList<VmFault> Faults => _faults;
 
+    /// <summary>Lines written by <c>Debug.Trace</c> (and breakpoint markers), oldest first; the IDE console drains it.</summary>
+    public List<string> TraceLog { get; } = [];
+
+    /// <summary>Raised by <c>Debug.Breakpoint()</c>; the IDE debugger pauses the simulation here (Doc 7 §14.3).</summary>
+    public event Action<VirtualMachine>? BreakpointHit;
+
+    internal void OnBreakpoint()
+    {
+        TraceLog.Add($"[breakpoint at T+{Host.Now}ns, step {Steps}]");
+        BreakpointHit?.Invoke(this);
+    }
+
     public bool IsIdle => _ready.Count == 0 && _timers.Count == 0;
 
     public Value GetGlobal(int slot) => _globals[slot];

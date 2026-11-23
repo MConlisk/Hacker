@@ -64,6 +64,15 @@ public sealed class NativeContext
     /// <summary>Current simulated time in nanoseconds.</summary>
     public long Now => _vm.Host.Now;
 
+    /// <summary>Steps executed by this VM so far (instructions plus native charges).</summary>
+    public long StepsExecuted => _vm.Steps;
+
+    /// <summary>Appends a line to the VM's trace log (Debug.Trace).</summary>
+    public void Trace(string line) => _vm.TraceLog.Add(line);
+
+    /// <summary>Signals a script breakpoint to the host debugger.</summary>
+    public void Breakpoint() => _vm.OnBreakpoint();
+
     /// <summary>Charges additional steps for work proportional to input size (Doc 7 §8.4 published costs).</summary>
     public void Charge(long steps) => _vm.ChargeNative(steps);
 

@@ -17,5 +17,8 @@ public static class StdNatives
         JsonNatives.Register(registry);
         BinaryNatives.Register(registry);
         CompressNatives.Register(registry);
+        TimeNetNatives.Register(registry);
+        GraphDataNatives.Register(registry);
+        GameTestNatives.Register(registry);
     }
 }
